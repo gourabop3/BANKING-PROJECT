@@ -150,51 +150,54 @@ const AllATMCards = () => {
             </div>
 
             <div
-              className={`relative w-full max-w-sm h-48 rounded-2xl p-6 mb-6 overflow-hidden text-white shadow-xl transform transition-all duration-300 hover:scale-105 bg-gradient-to-br ${getCardGradient(
-                atm.card_type
-              )}`}
-            >
-              {/* Removed background circles */}
-              <div className="relative h-full flex flex-col justify-between">
-                <div className="text-center">
-                  <h3 className="text-lg font-bold tracking-wide">{getCardTitle(atm.card_type)}</h3>
-                </div>
+  className={`relative w-full max-w-sm min-h-[12rem] rounded-2xl p-6 mb-6 overflow-hidden text-white shadow-xl transform transition-all duration-300 hover:scale-105 bg-gradient-to-br ${getCardGradient(
+    atm.card_type
+  )}`}
+>
+  {/* Dark overlay for better contrast */}
+  <div className="absolute inset-0 bg-black/20 z-0 rounded-2xl" />
 
-                <div className="text-center">
-                  <div className="text-2xl font-mono font-bold tracking-widest">
-                    {atm.card_no && atm.card_no.toString().length >= 16 
-                      ? `${atm.card_no.slice(0, 4)} **** **** ${atm.card_no.slice(12, 16)}`
-                      : atm.card_no || "Card Number Not Available"}
-                  </div>
-                </div>
+  {/* Content goes above overlay */}
+  <div className="relative h-full flex flex-col justify-between z-10">
+    <div className="text-center drop-shadow-md">
+      <h3 className="text-lg font-bold tracking-wide">{getCardTitle(atm.card_type)}</h3>
+    </div>
 
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex-1">
-                    <div className="text-xs text-white/90 mb-1 font-semibold">Cardholder</div>
-                    <div className="font-medium text-xs uppercase truncate">{user?.name || "CARDHOLDER"}</div>
-                  </div>
+    <div className="text-center drop-shadow-md">
+      <div className="text-2xl font-mono font-bold tracking-widest">
+        {atm.card_no && atm.card_no.toString().length >= 16
+          ? `${atm.card_no.slice(0, 4)} **** **** ${atm.card_no.slice(12, 16)}`
+          : atm.card_no || "Card Number Not Available"}
+      </div>
+    </div>
 
-                  <div className="flex-1 text-center">
-                    <div className="text-xs text-white/90 mb-1 font-semibold">CVV:</div>
-                    <div className="flex items-center justify-center gap-1">
-                      <span className="font-mono font-bold">{isShowCVV ? atm.cvv : "xxx"}</span>
-                      <button
-                        onClick={() => toggleCVV(atm._id)}
-                        className="text-white/80 hover:text-white transition-colors ml-1"
-                        title={isShowCVV ? "Hide CVV" : "Show CVV"}
-                      >
-                        {isShowCVV ? <FaEyeSlash size={12} /> : <FaEye size={12} />}
-                      </button>
-                    </div>
-                  </div>
+    <div className="flex items-center justify-between text-sm drop-shadow-md">
+      <div className="flex-1">
+        <div className="text-xs text-white/90 mb-1 font-semibold">Cardholder</div>
+        <div className="font-medium text-xs uppercase truncate">{user?.name || "CARDHOLDER"}</div>
+      </div>
 
-                  <div className="flex-1 text-right">
-                    <div className="text-xs text-white/90 mb-1 font-semibold">Exp:</div>
-                    <div className="font-mono font-bold">{formatExpiry(atm.expiry)}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
+      <div className="flex-1 text-center">
+        <div className="text-xs text-white/90 mb-1 font-semibold">CVV:</div>
+        <div className="flex items-center justify-center gap-1">
+          <span className="font-mono font-bold">{isShowCVV ? atm.cvv : "xxx"}</span>
+          <button
+            onClick={() => toggleCVV(atm._id)}
+            className="text-white/80 hover:text-white transition-colors ml-1"
+            title={isShowCVV ? "Hide CVV" : "Show CVV"}
+          >
+            {isShowCVV ? <FaEyeSlash size={12} /> : <FaEye size={12} />}
+          </button>
+        </div>
+      </div>
+
+      <div className="flex-1 text-right">
+        <div className="text-xs text-white/90 mb-1 font-semibold">Exp:</div>
+        <div className="font-mono font-bold">{formatExpiry(atm.expiry)}</div>
+      </div>
+    </div>
+  </div>
+</div>
 
             <div className="flex justify-center mb-4">
               <button
