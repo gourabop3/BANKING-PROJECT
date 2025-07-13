@@ -62,17 +62,17 @@ const AllATMCards = () => {
   };
 
   const getCardGradient = (type) => {
-  switch (type.toLowerCase()) {
-    case "basic":
-      return "from-black via-zinc-900 to-emerald-800"; // matches your image
-    case "classic":
-      return "from-purple-800 via-violet-900 to-indigo-950"; // visible rich gradient
-    case "platinum":
-      return "from-gray-600 via-slate-700 to-gray-900"; // improved visibility
-    default:
-      return "from-black via-zinc-900 to-emerald-800"; // fallback to basic style
-  }
-};
+    switch (type.toLowerCase()) {
+      case "basic":
+        return "from-slate-800 via-slate-700 to-slate-600"; // Better contrast for basic
+      case "classic":
+        return "from-indigo-600 via-purple-600 to-pink-600"; // Vibrant and visible
+      case "platinum":
+        return "from-gray-500 via-gray-400 to-gray-300"; // Light platinum look
+      default:
+        return "from-blue-600 via-blue-700 to-blue-800"; // Default blue gradient
+    }
+  };
 
   const validAtms = atms.filter(
     (atm) => {
@@ -150,54 +150,65 @@ const AllATMCards = () => {
             </div>
 
             <div
-  className={`relative w-full max-w-sm min-h-[12rem] rounded-2xl p-6 mb-6 overflow-hidden text-white shadow-xl transform transition-all duration-300 hover:scale-105 bg-gradient-to-br ${getCardGradient(
-    atm.card_type
-  )}`}
->
-  {/* Dark overlay for better contrast */}
-  <div className="absolute inset-0 bg-black/20 z-0 rounded-2xl" />
+              className={`relative w-full max-w-sm min-h-[12rem] rounded-2xl p-6 mb-6 overflow-hidden text-white shadow-2xl transform transition-all duration-300 hover:scale-105 bg-gradient-to-br ${getCardGradient(
+                atm.card_type
+              )}`}
+            >
+              {/* Subtle overlay for depth */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent z-0 rounded-2xl" />
 
-  {/* Content goes above overlay */}
-  <div className="relative h-full flex flex-col justify-between z-10">
-    <div className="text-center drop-shadow-md">
-      <h3 className="text-lg font-bold tracking-wide">{getCardTitle(atm.card_type)}</h3>
-    </div>
+              {/* Card content with improved contrast */}
+              <div className="relative h-full flex flex-col justify-between z-10">
+                <div className="text-center">
+                  <h3 className="text-lg font-bold tracking-wide text-white drop-shadow-lg">
+                    {getCardTitle(atm.card_type)}
+                  </h3>
+                </div>
 
-    <div className="text-center drop-shadow-md">
-      <div className="text-2xl font-mono font-bold tracking-widest">
-        {atm.card_no && atm.card_no.toString().length >= 16
-          ? `${atm.card_no.slice(0, 4)} **** **** ${atm.card_no.slice(12, 16)}`
-          : atm.card_no || "Card Number Not Available"}
-      </div>
-    </div>
+                <div className="text-center">
+                  <div className="text-2xl font-mono font-bold tracking-widest text-white drop-shadow-lg">
+                    {atm.card_no && atm.card_no.toString().length >= 16
+                      ? `${atm.card_no.slice(0, 4)} **** **** ${atm.card_no.slice(12, 16)}`
+                      : atm.card_no || "Card Number Not Available"}
+                  </div>
+                </div>
 
-    <div className="flex items-center justify-between text-sm drop-shadow-md">
-      <div className="flex-1">
-        <div className="text-xs text-white/90 mb-1 font-semibold">Cardholder</div>
-        <div className="font-medium text-xs uppercase truncate">{user?.name || "CARDHOLDER"}</div>
-      </div>
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex-1">
+                    <div className="text-xs text-white/90 mb-1 font-semibold drop-shadow">Cardholder</div>
+                    <div className="font-medium text-xs uppercase truncate text-white drop-shadow">
+                      {user?.name || "CARDHOLDER"}
+                    </div>
+                  </div>
 
-      <div className="flex-1 text-center">
-        <div className="text-xs text-white/90 mb-1 font-semibold">CVV:</div>
-        <div className="flex items-center justify-center gap-1">
-          <span className="font-mono font-bold">{isShowCVV ? atm.cvv : "xxx"}</span>
-          <button
-            onClick={() => toggleCVV(atm._id)}
-            className="text-white/80 hover:text-white transition-colors ml-1"
-            title={isShowCVV ? "Hide CVV" : "Show CVV"}
-          >
-            {isShowCVV ? <FaEyeSlash size={12} /> : <FaEye size={12} />}
-          </button>
-        </div>
-      </div>
+                  <div className="flex-1 text-center">
+                    <div className="text-xs text-white/90 mb-1 font-semibold drop-shadow">CVV:</div>
+                    <div className="flex items-center justify-center gap-1">
+                      <span className="font-mono font-bold text-white drop-shadow">
+                        {isShowCVV ? atm.cvv : "xxx"}
+                      </span>
+                      <button
+                        onClick={() => toggleCVV(atm._id)}
+                        className="text-white/80 hover:text-white transition-colors ml-1 drop-shadow"
+                        title={isShowCVV ? "Hide CVV" : "Show CVV"}
+                      >
+                        {isShowCVV ? <FaEyeSlash size={12} /> : <FaEye size={12} />}
+                      </button>
+                    </div>
+                  </div>
 
-      <div className="flex-1 text-right">
-        <div className="text-xs text-white/90 mb-1 font-semibold">Exp:</div>
-        <div className="font-mono font-bold">{formatExpiry(atm.expiry)}</div>
-      </div>
-    </div>
-  </div>
-</div>
+                  <div className="flex-1 text-right">
+                    <div className="text-xs text-white/90 mb-1 font-semibold drop-shadow">Exp:</div>
+                    <div className="font-mono font-bold text-white drop-shadow">
+                      {formatExpiry(atm.expiry)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional shine effect for premium look */}
+              <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 rounded-2xl" />
+            </div>
 
             <div className="flex justify-center mb-4">
               <button
