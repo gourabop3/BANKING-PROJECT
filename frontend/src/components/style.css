@@ -1,0 +1,343 @@
+/* Loader Styles */
+.loader {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 10;
+  width: 160px;
+  height: 100px;
+  margin-left: -80px;
+  margin-top: -50px;
+  border-radius: 5px;
+  background: #1e3f57;
+  animation: dot1_ 3s cubic-bezier(0.55, 0.3, 0.24, 0.99) infinite;
+}
+
+.loader:nth-child(2) {
+  z-index: 11;
+  width: 150px;
+  height: 90px;
+  margin-top: -45px;
+  margin-left: -75px;
+  border-radius: 3px;
+  background: #3c517d;
+  animation-name: dot2_;
+}
+
+.loader:nth-child(3) {
+  z-index: 12;
+  width: 40px;
+  height: 20px;
+  margin-top: 50px;
+  margin-left: -20px;
+  border-radius: 0 0 5px 5px;
+  background: #6bb2cd;
+  animation-name: dot3_;
+}
+
+@keyframes dot1_ {
+  3%, 97% {
+    width: 160px;
+    height: 100px;
+    margin-top: -50px;
+    margin-left: -80px;
+  }
+  30%, 36% {
+    width: 80px;
+    height: 120px;
+    margin-top: -60px;
+    margin-left: -40px;
+  }
+  63%, 69% {
+    width: 40px;
+    height: 80px;
+    margin-top: -40px;
+    margin-left: -20px;
+  }
+}
+
+@keyframes dot2_ {
+  3%, 97% {
+    width: 150px;
+    height: 90px;
+    margin-left: -75px;
+    margin-top: -45px;
+  }
+  30%, 36% {
+    width: 70px;
+    height: 96px;
+    margin-left: -35px;
+    margin-top: -48px;
+  }
+  63%, 69% {
+    width: 32px;
+    height: 60px;
+    margin-left: -16px;
+    margin-top: -30px;
+  }
+}
+
+@keyframes dot3_ {
+  3%, 97% {
+    width: 40px;
+    height: 20px;
+    margin-left: -20px;
+    margin-top: 50px;
+  }
+  30%, 36% {
+    width: 8px;
+    height: 8px;
+    margin-left: -5px;
+    margin-top: 49px;
+    border-radius: 8px;
+  }
+  63%, 69% {
+    width: 16px;
+    height: 4px;
+    margin-left: -8px;
+    margin-top: -37px;
+    border-radius: 10px;
+  }
+}
+
+/* ATM Card Base */
+.atm-card {
+  position: relative;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  padding: 20px;
+  color: #fff;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 200px;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+}
+
+.atm-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+}
+
+.atm-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 16px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.atm-card > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* Hover Effect */
+.atm-card:hover {
+  transform: translateY(-10px) rotateX(6deg);
+  box-shadow: 0 35px 60px rgba(0, 0, 0, 0.4);
+}
+
+.atm-card:hover::before {
+  transform: translateX(100%);
+}
+
+/* ATM Card Variants */
+.atm-card-basic {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.atm-card-classic {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.atm-card-platinum {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+/* Card Elements */
+.card-chip {
+  width: 48px;
+  height: 36px;
+  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.card-chip::before {
+  content: '';
+  position: absolute;
+  width: 32px;
+  height: 24px;
+  background: linear-gradient(135deg, #ffb347 0%, #ffcc02 100%);
+  border-radius: 4px;
+}
+
+/* Typography */
+.card-number,
+.card-title,
+.card-label,
+.card-value {
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  letter-spacing: 2px;
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+}
+
+.card-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
+.card-value {
+  font-size: 14px;
+}
+
+.card-title {
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+/* Badges */
+.card-type-badge {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+.card-security-badge {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
+}
+
+.atm-card:hover .card-security-badge {
+  opacity: 1;
+}
+
+/* Card Patterns */
+.card-pattern {
+  position: absolute;
+  inset: 0;
+  opacity: 0.05;
+}
+
+.card-pattern-circle-1 {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 128px;
+  height: 128px;
+  background: white;
+  border-radius: 50%;
+  transform: translate(-64px, -64px);
+}
+
+.card-pattern-circle-2 {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 96px;
+  height: 96px;
+  background: white;
+  border-radius: 50%;
+  transform: translate(48px, 48px);
+}
+
+/* Entrance Animation */
+@keyframes cardEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.card-entrance {
+  animation: cardEntrance 0.6s ease-out;
+}
+
+/* Button Styles */
+.add-card-btn {
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.add-card-btn:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+  transform: translateY(-2px);
+}
+
+/* Empty State Styles */
+.empty-state-container {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border: 2px dashed #cbd5e1;
+  border-radius: 16px;
+  padding: 2rem;
+  text-align: center;
+}
+
+.empty-state-icon {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border-radius: 50%;
+  padding: 1.5rem;
+  width: 6rem;
+  height: 6rem;
+  margin: 0 auto 1.5rem;
+}
+
+/* Feature Card Styles */
+.feature-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .atm-card {
+    padding: 20px;
+  }
+
+  .card-number {
+    font-size: 16px;
+  }
+}
