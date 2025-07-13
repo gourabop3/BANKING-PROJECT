@@ -17,7 +17,7 @@ const AtmCards = () => {
         <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl shadow-xl p-6 md:p-8 text-white mb-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
             <div className="flex items-center gap-4">
-              <div className="bg-white bg-opacity-60 p-3 rounded-xl">
+              <div className="bg-white bg-opacity-90 backdrop-blur-sm p-3 rounded-xl">
   <FaCreditCard className="text-blue-500 text-2xl md:text-3xl" />
 </div>
               <div>
