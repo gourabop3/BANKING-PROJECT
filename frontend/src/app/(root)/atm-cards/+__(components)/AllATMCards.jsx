@@ -62,17 +62,17 @@ const AllATMCards = () => {
   };
 
   const getCardGradient = (type) => {
-    switch (type.toLowerCase()) {
-      case "basic":
-        return "from-green-800 to-emerald-950";
-      case "classic":
-        return "from-purple-800 to-violet-950";
-      case "platinum":
-        return "from-gray-800 to-slate-950";
-      default:
-        return "from-green-800 to-emerald-950";
-    }
-  };
+  switch (type.toLowerCase()) {
+    case "basic":
+      return "from-black via-zinc-900 to-emerald-800"; // matches your image
+    case "classic":
+      return "from-purple-800 via-violet-900 to-indigo-950"; // visible rich gradient
+    case "platinum":
+      return "from-gray-600 via-slate-700 to-gray-900"; // improved visibility
+    default:
+      return "from-black via-zinc-900 to-emerald-800"; // fallback to basic style
+  }
+};
 
   const validAtms = atms.filter(
     (atm) => {
