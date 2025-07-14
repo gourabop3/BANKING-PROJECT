@@ -124,8 +124,8 @@ const ProfilePage = () => {
   const kycStatus = getKYCStatus()
 
   return (
-    <div className="min-h-screen flex justify-center items-start bg-gradient-to-br from-gray-50 to-blue-50 py-12">
-      <div className="relative w-full max-w-md">
+    <div className="min-h-screen flex flex-col items-center bg-gradient-to-br from-gray-50 to-blue-50 py-12">
+      <div className="relative w-full max-w-md mb-8">
         {/* Floating Profile Image */}
         <div className="absolute left-1/2 -top-16 -translate-x-1/2 z-10">
           <div className="w-32 h-32 rounded-full bg-white p-2 shadow-lg relative">
@@ -184,6 +184,94 @@ const ProfilePage = () => {
             </div>
           </div>
         </div>
+      </div>
+      {/* Update Profile Form */}
+      <div className="w-full max-w-md bg-white/90 rounded-2xl shadow-xl p-8">
+        <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-indigo-700">
+          <FaEdit /> Update Profile
+        </h2>
+        <Formik 
+          validationSchema={validationSchema} 
+          initialValues={{
+            name: user?.name || '',
+            mobile_no: user?.mobile_no || '',
+            bio: user?.bio || ''
+          }}
+          enableReinitialize={true}
+          onSubmit={onSubmitHandler}
+        >
+          <Form className="space-y-5">
+            <div>
+              <label htmlFor="name" className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                <FaUser className="text-indigo-600" />
+                Full Name <span className="text-red-500">*</span>
+              </label>
+              <Field 
+                id="name" 
+                name="name" 
+                type="text" 
+                className='w-full py-3 px-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-colors' 
+                placeholder='Enter Your Full Name' 
+              />
+              <ErrorMessage name="name" className='text-red-500 text-sm' component={'p'} />
+            </div>
+            <div>
+              <label htmlFor="email" className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                <FaEnvelope className="text-indigo-600" />
+                Email Address
+              </label>
+              <div className="flex items-center gap-2">
+                <input 
+                  readOnly 
+                  id="email" 
+                  value={user?.email || ''} 
+                  type="text" 
+                  className='w-full py-3 px-4 bg-gray-100 border border-gray-300 rounded-xl outline-none' 
+                  placeholder='Email Address' 
+                />
+                {!user?.isEmailVerified && <VerifiedEMailModel />}
+              </div>
+            </div>
+            <div>
+              <label htmlFor="mobile_no" className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                <FaPhone className="text-indigo-600" />
+                Mobile Number <span className="text-red-500">*</span>
+              </label>
+              <Field 
+                name="mobile_no" 
+                type="text"
+                id="mobile_no" 
+                onInput={onlyInputNumber}
+                className='w-full py-3 px-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-colors' 
+                placeholder='Enter Mobile Number' 
+              />
+              <ErrorMessage name="mobile_no" className='text-red-500 text-sm' component={'p'} />
+            </div>
+            <div>
+              <label htmlFor="bio" className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                <FaEdit className="text-indigo-600" />
+                Bio
+              </label>
+              <Field 
+                name="bio" 
+                as="textarea"
+                id="bio"  
+                rows="3" 
+                className='w-full py-3 px-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-colors resize-none' 
+                placeholder='Tell us about yourself...' 
+              />
+              <ErrorMessage name="bio" className='text-red-500 text-sm' component={'p'} />
+            </div>
+            <div>
+              <CustomAuthButton 
+                isLoading={loader} 
+                text={'Update Profile'} 
+                className='bg-indigo-600 hover:bg-indigo-700 text-white py-3 px-8 rounded-xl font-medium transition-colors' 
+                type='submit' 
+              />
+            </div>
+          </Form>
+        </Formik>
       </div>
     </div>
   )
