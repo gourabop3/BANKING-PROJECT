@@ -45,7 +45,9 @@ import { IoShieldCheckmark } from 'react-icons/io5';
 
 const RechargePage = () => {
   const [activeTab, setActiveTab] = useState('mobile');
-  const [rechargeMode, setRechargeMode] = useState('demo'); // 'demo' or 'real'
+  // Remove real mode recharge feature and related logic
+  // Only allow demo mode
+  const [rechargeMode, setRechargeMode] = useState('demo'); // 'demo' only
   const [rechargeData, setRechargeData] = useState({
     mobileNumber: '',
     operator: '',
@@ -304,16 +306,6 @@ const RechargePage = () => {
                     }`}
                   >
                     Demo Mode
-                  </button>
-                  <button
-                    onClick={() => setRechargeMode('real')}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                      rechargeMode === 'real' 
-                        ? 'bg-white text-blue-600 shadow-lg' 
-                        : 'text-white/80 hover:text-white'
-                    }`}
-                  >
-                    Real Mode
                   </button>
                 </div>
               </div>

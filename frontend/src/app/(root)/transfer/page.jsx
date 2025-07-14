@@ -55,7 +55,9 @@ import {
 import { IoShieldCheckmark, IoCardOutline } from 'react-icons/io5';
 
 const TransferPage = () => {
-  const [transferMode, setTransferMode] = useState('internal'); // 'internal' or 'external'
+  // Remove external bank transfer mode and related logic
+  // Only allow internal transfers
+  const [transferMode, setTransferMode] = useState('internal'); // 'internal' only
   const [transferData, setTransferData] = useState({
     recipientAccountNumber: '',
     recipientName: '',
@@ -88,17 +90,8 @@ const TransferPage = () => {
     return () => clearInterval(interval);
   }, [fetchUserProfile]);
 
-  // Popular banks for quick selection
-  const popularBanks = [
-    { code: 'SBIN', name: 'State Bank of India', logo: '🏦' },
-    { code: 'HDFC', name: 'HDFC Bank', logo: '🏦' },
-    { code: 'ICIC', name: 'ICICI Bank', logo: '🏦' },
-    { code: 'AXIS', name: 'Axis Bank', logo: '🏦' },
-    { code: 'KOTK', name: 'Kotak Mahindra Bank', logo: '🏦' },
-    { code: 'IDIB', name: 'Indian Bank', logo: '🏦' },
-    { code: 'PUNB', name: 'Punjab National Bank', logo: '🏦' },
-    { code: 'BARB', name: 'Bank of Baroda', logo: '🏦' }
-  ];
+  // Remove external bank transfer mode and related logic
+  // Remove the transfer mode toggle and any references to 'external'
 
   // Transfer purposes
   const transferPurposes = [
@@ -143,41 +136,21 @@ const TransferPage = () => {
   };
 
   const verifyRecipientAccount = async () => {
-    if (transferMode === 'internal') {
-      if (!transferData.recipientAccountNumber || transferData.recipientAccountNumber.length < 12) {
-        toast.error('Please enter a valid account number');
-        return;
-      }
+    if (!transferData.recipientAccountNumber || transferData.recipientAccountNumber.length < 12) {
+      toast.error('Please enter a valid account number');
+      return;
+    }
 
-      if (transferData.recipientAccountNumber === userAccountNumber) {
-        toast.error('Cannot transfer to your own account');
-        return;
-      }
-    } else {
-      // External bank validation
-      if (!transferData.recipientAccountNumber || transferData.recipientAccountNumber.length < 9) {
-        toast.error('Please enter a valid account number');
-        return;
-      }
-      if (!transferData.recipientName.trim()) {
-        toast.error('Please enter recipient name');
-        return;
-      }
-      if (!transferData.ifscCode || transferData.ifscCode.length < 4) {
-        toast.error('Please enter valid IFSC code');
-        return;
-      }
+    if (transferData.recipientAccountNumber === userAccountNumber) {
+      toast.error('Cannot transfer to your own account');
+      return;
     }
 
     setVerifyingAccount(true);
     try {
-      const endpoint = transferMode === 'internal' ? '/transfer/verify-account' : '/transfer/verify-external-account';
-      const payload = transferMode === 'internal' ? {
+      const endpoint = '/transfer/verify-account';
+      const payload = {
         accountNumber: transferData.recipientAccountNumber
-      } : {
-        accountNumber: transferData.recipientAccountNumber,
-        ifscCode: transferData.ifscCode,
-        recipientName: transferData.recipientName
       };
 
       const response = await axiosClient.post(endpoint, payload, {
@@ -234,15 +207,11 @@ const TransferPage = () => {
     console.log("confirmTransfer called", transferMode, transferData, recipientDetails);
     setLoading(true);
     try {
-      const endpoint = transferMode === 'internal' ? '/transfer/initiate' : '/transfer/external';
-      const payload = transferMode === 'internal' ? {
+      const endpoint = '/transfer/initiate';
+      const payload = {
         ...transferData,
         amount: parseFloat(transferData.amount),
         recipientAccountId: recipientDetails?.accountId || ''
-      } : {
-        ...transferData,
-        amount: parseFloat(transferData.amount),
-        recipientDetails: recipientDetails || {}
       };
       console.log("About to send transfer request", endpoint, payload);
 
@@ -262,7 +231,7 @@ const TransferPage = () => {
           const params = new URLSearchParams({
             txnId: transferId || '',
             amount: transferData.amount || '',
-            recipient: transferMode === 'internal' ? (recipientDetails?.accountHolderName || '') : (transferData.recipientName || ''),
+            recipient: recipientDetails?.accountHolderName || '',
             account: transferData.recipientAccountNumber || '',
             type: transferData.transferType || '',
             mode: transferMode || '',
@@ -288,7 +257,7 @@ const TransferPage = () => {
   };
 
   // Defensive rendering for recipientDetails
-  const safeRecipientName = transferMode === 'internal' ? (recipientDetails?.accountHolderName || '') : (transferData.recipientName || '');
+  const safeRecipientName = recipientDetails?.accountHolderName || '';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">
@@ -322,16 +291,6 @@ const TransferPage = () => {
                     }`}
                   >
                     Internal
-                  </button>
-                  <button
-                    onClick={() => setTransferMode('external')}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                      transferMode === 'external' 
-                        ? 'bg-white text-blue-600 shadow-lg' 
-                        : 'text-white/80 hover:text-white'
-                    }`}
-                  >
-                    External Bank
                   </button>
                 </div>
               </div>
@@ -523,7 +482,8 @@ const TransferPage = () => {
                         Quick Select Popular Banks
                       </label>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        {popularBanks.map((bank) => (
+                        {/* This section is no longer relevant for external transfers */}
+                        {/* {popularBanks.map((bank) => (
                           <button
                             key={bank.code}
                             type="button"
@@ -537,7 +497,7 @@ const TransferPage = () => {
                             <div className="text-2xl mb-1">{bank.logo}</div>
                             <div className="text-xs font-medium text-gray-700">{bank.name}</div>
                           </button>
-                        ))}
+                        ))} */}
                       </div>
                     </div>
 
@@ -571,7 +531,7 @@ const TransferPage = () => {
                       <div>
                         <p className="text-sm text-gray-600">Account Holder</p>
                         <p className="font-semibold text-gray-800">
-                          {transferMode === 'internal' ? recipientDetails.accountHolderName : transferData.recipientName}
+                          {safeRecipientName}
                         </p>
                       </div>
                       <div>
@@ -580,7 +540,7 @@ const TransferPage = () => {
                           {formatAccountNumber(transferData.recipientAccountNumber)}
                         </p>
                       </div>
-                      {transferMode === 'external' && (
+                      {/* {transferMode === 'external' && (
                         <>
                           <div>
                             <p className="text-sm text-gray-600">Bank Name</p>
@@ -591,7 +551,7 @@ const TransferPage = () => {
                             <p className="font-mono font-semibold text-gray-800">{transferData.ifscCode}</p>
                           </div>
                         </>
-                      )}
+                      )} */}
                     </div>
                   </div>
                 )}
@@ -722,7 +682,7 @@ const TransferPage = () => {
                   <div>
                     <h2 className="text-xl font-bold">Confirm Transfer</h2>
                     <p className="text-blue-100 text-sm">
-                      {transferMode === 'internal' ? 'Internal transfer' : 'External bank transfer'}
+                      Internal transfer
                     </p>
                   </div>
                 </div>
@@ -741,7 +701,7 @@ const TransferPage = () => {
                     {formatAccountNumber(transferData.recipientAccountNumber)}
                   </span>
                 </div>
-                {transferMode === 'external' && (
+                {/* {transferMode === 'external' && (
                   <>
                     <div className="flex justify-between items-center py-2 border-b border-gray-100">
                       <span className="text-gray-600">Bank:</span>
@@ -752,7 +712,7 @@ const TransferPage = () => {
                       <span className="font-mono text-gray-800">{transferData.ifscCode}</span>
                     </div>
                   </>
-                )}
+                )} */}
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
                   <span className="text-gray-600">Amount:</span>
                   <span className="font-semibold text-lg text-green-600">₹{parseFloat(transferData.amount).toLocaleString()}</span>
