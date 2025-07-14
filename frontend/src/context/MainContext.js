@@ -29,8 +29,12 @@ export const MainContextProvider = ({children})=>{
     const fetchUserProfile = async()=>{
 
         try {
-            const token =localStorage.getItem("token") || ''
-            if(!token) return
+            const token = localStorage.getItem("token") || ''
+            if (!token) {
+                // No token means user is not authenticated; stop loading state
+                setLoading(false);
+                return;
+            }
             const response = await axiosClient.get('/auth/profile',{
                 headers:{
                     'Authorization':'Bearer '+ token
