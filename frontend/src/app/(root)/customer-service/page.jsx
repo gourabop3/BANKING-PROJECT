@@ -42,7 +42,7 @@ export default function CustomerServicePage() {
   const bottomRef = useRef(null);
   const chatInputRef = useRef(null);
   // Add floating widget state
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
 
   // Quick reply suggestions based on user authentication
   const quickReplies = user ? [
