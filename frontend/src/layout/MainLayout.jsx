@@ -12,7 +12,7 @@ import AppSidebar from '@/components/AppSidebar';
 const MainLayout = ({children}) => {
   const pathname = usePathname();
   // Hide navbar on login and admin-login pages
-  const hideNavbar = pathname === '/login' || pathname === '/admin-login';
+  const hideNavbar = pathname === '/login' || pathname === '/admin-login' || pathname === '/register';
   const hideSidebar = hideNavbar || pathname.startsWith('/admin');
   return (
     <Provider store={store}>
