@@ -7,7 +7,14 @@ import { toast } from "react-toastify";
 import {createContext, useContext, useState, useEffect} from 'react'
 import { useRouter } from "next/navigation";
 
-const mainContext = createContext({user:{},fetchUserProfile(){},LogoutHandler(){},fetchATMDetails(){},atm:{}})
+const mainContext = createContext({
+    user: {},
+    loading: true,
+    fetchUserProfile() {},
+    LogoutHandler() {},
+    fetchATMDetails() {},
+    atm: {},
+})
 
 export const useMainContext = ()=> useContext(mainContext)
 
@@ -83,7 +90,18 @@ export const MainContextProvider = ({children})=>{
             </div>
     }
 
-    return <mainContext.Provider value={{user,fetchUserProfile,LogoutHandler,fetchATMDetails,atm}}>
-        {children}
-    </mainContext.Provider>
+    return (
+        <mainContext.Provider
+            value={{
+                user,
+                loading,
+                fetchUserProfile,
+                LogoutHandler,
+                fetchATMDetails,
+                atm,
+            }}
+        >
+            {children}
+        </mainContext.Provider>
+    )
 }
