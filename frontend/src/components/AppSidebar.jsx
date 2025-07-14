@@ -26,6 +26,7 @@ const links = [
   { href: '/atm-cards', label: 'ATM Cards', Icon: IoCardSharp },
   { href: '/customer-service', label: 'Customer Service', Icon: AiOutlineRobot },
   { href: '/about', label: 'About', Icon: AiOutlineInfoCircle },
+  { href: '/developer-info', label: 'Developer Info', Icon: FaGithub },
   { href: '/profile', label: 'Profile', Icon: GiFalloutShelter },
 ];
 
