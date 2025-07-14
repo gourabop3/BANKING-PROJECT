@@ -21,7 +21,24 @@ const FDCard = ({data, isUpdate, setIsUpdate}) => {
     const amount = `${data.amount || 0}`
     const applyFor = data.apply_for || 'Fixed Deposit'
     const isActive = !data.isClaimed
-    const depositDate = data.date ? moment(data.date) : moment()
+    
+    // Robust date parsing for FD
+    let depositDate;
+    if (data.date) {
+        if (!isNaN(Number(data.date))) {
+            // If it's a timestamp (number or string)
+            depositDate = moment.unix(Number(data.date));
+        } else {
+            // Try ISO or other string
+            depositDate = moment.utc(data.date, moment.ISO_8601, true);
+            if (!depositDate.isValid()) {
+                depositDate = moment(); // fallback
+            }
+        }
+    } else {
+        depositDate = moment();
+    }
+
     const daysSinceDeposit = moment().diff(depositDate, 'days')
 
     const getStatusColor = () => {
