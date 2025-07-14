@@ -6,7 +6,6 @@ class PaymentGatewayController {
     static ProcessPayment = async (req, res) => {
         try {
             const { amount, currency, customer_info, payment_method, callback_url } = req.body
-            const api_key = req.headers['x-api-key']
             const merchant_id = req.headers['x-merchant-id']
             
             const result = await PaymentGatewayService.ProcessPayment({
@@ -15,7 +14,6 @@ class PaymentGatewayController {
                 customer_info,
                 payment_method,
                 callback_url,
-                api_key,
                 merchant_id
             })
             
@@ -94,9 +92,8 @@ class PaymentGatewayController {
     static GetPaymentStatus = async (req, res) => {
         try {
             const { transaction_id } = req.params
-            const api_key = req.headers['x-api-key']
             
-            const result = await PaymentGatewayService.GetPaymentStatus(transaction_id, api_key)
+            const result = await PaymentGatewayService.GetPaymentStatus(transaction_id)
             
             res.status(200).json(result)
         } catch (error) {
@@ -111,13 +108,11 @@ class PaymentGatewayController {
     static ProcessRefund = async (req, res) => {
         try {
             const { transaction_id, amount, reason } = req.body
-            const api_key = req.headers['x-api-key']
             
             const result = await PaymentGatewayService.ProcessRefund({
                 transaction_id,
                 amount,
-                reason,
-                api_key
+                reason
             })
             
             res.status(200).json(result)
@@ -133,10 +128,8 @@ class PaymentGatewayController {
     static GetTransactionHistory = async (req, res) => {
         try {
             const { page = 1, limit = 50, status, start_date, end_date } = req.query
-            const api_key = req.headers['x-api-key']
             
             const result = await PaymentGatewayService.GetTransactionHistory({
-                api_key,
                 page: parseInt(page),
                 limit: parseInt(limit),
                 status,
@@ -185,15 +178,13 @@ class PaymentGatewayController {
     static GeneratePaymentLink = async (req, res) => {
         try {
             const { amount, currency, description, customer_email, expires_at } = req.body
-            const api_key = req.headers['x-api-key']
             
             const result = await PaymentGatewayService.GeneratePaymentLink({
                 amount,
                 currency,
                 description,
                 customer_email,
-                expires_at,
-                api_key
+                expires_at
             })
             
             res.status(200).json(result)

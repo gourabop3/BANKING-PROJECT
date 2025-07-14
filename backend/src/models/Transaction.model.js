@@ -167,7 +167,6 @@ const transactionSchema = new mongoose.Schema({
     },
     // Additional metadata
     metadata: {
-        api_key_used: String,
         environment: {
             type: String,
             enum: ['test', 'live'],

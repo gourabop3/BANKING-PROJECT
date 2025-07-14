@@ -14,7 +14,7 @@ const NodeMailerService = require("../utils/NodeMail")
 // New: email notifications & utils for account opening
 const NotificationService = require("./NotificationService");
 const { generateAccountNumber, getAccountTypeDisplayName } = require("../utils/accountNumberUtils");
-const { APIKEYModel } = require("../models/api_key.model")
+
 
 class AuthService{
     static async loginUser(body){
@@ -219,15 +219,6 @@ class AuthService{
         if(!userd){
             throw new ApiError(401,"Profile Not Found")
         }
-
-        // api key credentials
-
-            const existApiKeyDoc = await APIKEYModel.findOne({user,isOnWorking:true})
-            .select("api_hash api_secret -_id")
-            if(existApiKeyDoc){
-                profile_obj['api_keys'] = existApiKeyDoc
-            }
-
 
 
         return  {...userd.toObject(),...profile_obj,atms}
