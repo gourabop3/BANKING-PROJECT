@@ -62,15 +62,16 @@ const AllATMCards = () => {
   };
 
   const getCardGradient = (type) => {
-    switch (type.toLowerCase()) {
-      case "basic":
-        return "from-blue-400 via-blue-500 to-purple-500"; // Vibrant blue-purple
-      case "classic":
-        return "from-pink-500 via-purple-500 to-indigo-500"; // Pink-purple-indigo
-      case "platinum":
-        return "from-yellow-400 via-yellow-200 to-white"; // Gold/white platinum
+    if (!type || typeof type !== 'string') return 'from-gray-400 via-gray-500 to-gray-600'; // fallback
+    switch (type.toLowerCase().trim()) {
+      case 'basic':
+        return 'from-blue-400 via-blue-500 to-purple-500';
+      case 'classic':
+        return 'from-pink-500 via-purple-500 to-indigo-500';
+      case 'platinum':
+        return 'from-yellow-400 via-yellow-200 to-white';
       default:
-        return "from-teal-400 via-cyan-500 to-blue-500"; // Teal-cyan-blue
+        return 'from-teal-400 via-cyan-500 to-blue-500';
     }
   };
 

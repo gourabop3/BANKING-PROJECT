@@ -35,6 +35,7 @@ import {
 import { MdVerified, MdPending, MdError, MdAccountBalance, MdSecurity } from 'react-icons/md';
 import HeaderName from '@/components/HeaderName';
 import { Tab } from '@headlessui/react';
+import { generateAccountNumber, formatAccountNumber } from '@/utils/accountUtils';
 
 const ProfilePage = () => {
   const { user, fetchUserProfile } = useMainContext()
@@ -409,9 +410,18 @@ const ProfilePage = () => {
                   <div className="bg-blue-50 rounded-xl p-4">
                     <p className="text-sm text-gray-600 mb-2">Your linked account numbers:</p>
                     <div className="flex flex-wrap gap-2">
-                      {(Array.isArray(user?.account_no) ? user.account_no : []).map((acc, idx) => (
-                        <span key={idx} className="bg-white border border-blue-200 px-4 py-2 rounded-xl font-mono text-blue-700 text-sm">{acc}</span>
-                      ))}
+                      {(Array.isArray(user?.account_no) ? user.account_no : []).length === 0 ? (
+                        <span className="text-gray-400">No accounts found.</span>
+                      ) : (
+                        user.account_no.map((acc, idx) => {
+                          let formatted = acc && acc._id && user?._id && acc.ac_type
+                            ? formatAccountNumber(generateAccountNumber(user._id, acc._id, acc.ac_type))
+                            : acc?._id || 'Unknown';
+                          return (
+                            <span key={idx} className="bg-white border border-blue-200 px-4 py-2 rounded-xl font-mono text-blue-700 text-sm">{formatted}</span>
+                          );
+                        })
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
@@ -420,7 +430,18 @@ const ProfilePage = () => {
                   </div>
                   <div className="bg-green-50 rounded-xl p-4 flex items-center gap-2">
                     <span className="font-mono text-green-700">{user?.upi_id || 'Not Set'}</span>
-                    <button className="bg-green-600 text-white px-3 py-1 rounded-xl font-semibold hover:bg-green-700 transition-all text-xs">Copy</button>
+                    <button
+                      className="bg-green-600 text-white px-3 py-1 rounded-xl font-semibold hover:bg-green-700 transition-all text-xs"
+                      onClick={() => {
+                        if (user?.upi_id) {
+                          navigator.clipboard.writeText(user.upi_id);
+                          toast.success('UPI ID copied!');
+                        }
+                      }}
+                      disabled={!user?.upi_id}
+                    >
+                      Copy
+                    </button>
                   </div>
                 </div>
               ) : (
