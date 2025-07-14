@@ -325,7 +325,7 @@ const ProfilePage = () => {
                 <div className="bg-blue-50 rounded-xl p-4">
                   <p className="text-sm text-gray-600 mb-2">Your linked account numbers:</p>
                   <div className="flex flex-wrap gap-2">
-                    {(user?.account_no || []).map((acc, idx) => (
+                    {(Array.isArray(user?.account_no) ? user.account_no : []).map((acc, idx) => (
                       <span key={idx} className="bg-white border border-blue-200 px-4 py-2 rounded-xl font-mono text-blue-700 text-sm">{acc}</span>
                     ))}
                   </div>
