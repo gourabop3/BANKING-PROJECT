@@ -17,8 +17,10 @@ const UPIPage = () => {
     }
   }, [user, router]);
 
-  // KYC check and custom message
-  if (user && user.kyc_status !== 'completed') {
+  // KYC check and custom message (do NOT redirect)
+  const showKycBlock = user && user.kyc_status !== 'completed';
+
+  if (showKycBlock) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
         <div className="bg-white p-8 rounded-xl shadow-lg text-center">
