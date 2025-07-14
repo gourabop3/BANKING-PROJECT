@@ -237,11 +237,11 @@ const TransferPage = () => {
       const payload = transferMode === 'internal' ? {
         ...transferData,
         amount: parseFloat(transferData.amount),
-        recipientAccountId: recipientDetails.accountId
+        recipientAccountId: recipientDetails?.accountId || ''
       } : {
         ...transferData,
         amount: parseFloat(transferData.amount),
-        recipientDetails: recipientDetails
+        recipientDetails: recipientDetails || {}
       };
 
       const response = await axiosClient.post(endpoint, payload, {
@@ -252,29 +252,27 @@ const TransferPage = () => {
 
       if (response.data && response.data.success) {
         const { transferId, transactionDetails } = response.data;
-        // Animate balance update
         setBalanceAnimation(true);
         setTimeout(() => setBalanceAnimation(false), 2000);
         await fetchUserProfile();
         toast.success('Transfer successful! Balance updated.');
         setTimeout(() => {
           const params = new URLSearchParams({
-            txnId: transferId,
-            amount: transferData.amount,
-            recipient: transferMode === 'internal' ? recipientDetails.accountHolderName : transferData.recipientName,
-            account: transferData.recipientAccountNumber,
-            type: transferData.transferType,
-            mode: transferMode,
+            txnId: transferId || '',
+            amount: transferData.amount || '',
+            recipient: transferMode === 'internal' ? (recipientDetails?.accountHolderName || '') : (transferData.recipientName || ''),
+            account: transferData.recipientAccountNumber || '',
+            type: transferData.transferType || '',
+            mode: transferMode || '',
             ts: Date.now()
           });
           router.push(`/transfer-success?${params.toString()}`);
         }, 1500);
       } else {
-        // If API returns success: false
         toast.error(response.data?.msg || 'Transfer failed');
       }
     } catch (error) {
-      // Robust error handling: show toast, never crash
+      console.log('Transfer error:', error); // Log the error for debugging
       let msg = 'Transfer failed';
       if (error?.response?.data?.msg) {
         msg = error.response.data.msg;
@@ -286,6 +284,9 @@ const TransferPage = () => {
       setLoading(false);
     }
   };
+
+  // Defensive rendering for recipientDetails
+  const safeRecipientName = transferMode === 'internal' ? (recipientDetails?.accountHolderName || '') : (transferData.recipientName || '');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">
@@ -729,7 +730,7 @@ const TransferPage = () => {
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
                   <span className="text-gray-600">To:</span>
                   <span className="font-semibold text-gray-800">
-                    {transferMode === 'internal' ? recipientDetails?.accountHolderName : transferData.recipientName}
+                    {safeRecipientName}
                   </span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
