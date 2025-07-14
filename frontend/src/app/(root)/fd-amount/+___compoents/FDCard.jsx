@@ -27,9 +27,12 @@ const FDCard = ({data, isUpdate, setIsUpdate}) => {
     const fdDate = data.createdAt || data.date;
     if (fdDate) {
         if (!isNaN(Number(fdDate))) {
-            depositDate = moment.unix(Number(fdDate));
+            // Check if it's in milliseconds (13 digits) or seconds (10 digits)
+            depositDate = String(fdDate).length > 10
+                ? moment(Number(fdDate))
+                : moment.unix(Number(fdDate));
         } else {
-            depositDate = moment.utc(fdDate, moment.ISO_8601, true);
+            depositDate = moment(fdDate);
             if (!depositDate.isValid()) {
                 depositDate = moment();
             }
