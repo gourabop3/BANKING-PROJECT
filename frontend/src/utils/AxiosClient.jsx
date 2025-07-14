@@ -13,6 +13,11 @@ axiosClient.interceptors.response.use(
   (error) => {
     // eslint-disable-next-line no-console
     console.error('[AxiosError]', error);
+    if (typeof window !== 'undefined' && error.response && error.response.status === 401) {
+      localStorage.removeItem('admin_token');
+      window.location.href = '/admin-login';
+      return;
+    }
     return Promise.reject(error);
   }
 );

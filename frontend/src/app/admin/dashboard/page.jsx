@@ -50,8 +50,8 @@ export default function AdminDashboardPage() {
         setTransactions(await txnRes.data);
       } catch (error) {
         toast.error('Session expired, please login again');
-        localStorage.removeItem('admin_token');
-        router.push('/admin-login');
+        // localStorage.removeItem('admin_token');
+        // router.push('/admin-login');
       }
     };
     fetchStats();
