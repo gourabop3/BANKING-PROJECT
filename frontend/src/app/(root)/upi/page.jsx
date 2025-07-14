@@ -50,6 +50,15 @@ const UPIPage = () => {
   // Add state for two-step UPI pay flow
   const [showPinStep, setShowPinStep] = useState(false);
 
+  // Add state for reset PIN flow
+  const [showResetPin, setShowResetPin] = useState(false);
+  const [resetStep, setResetStep] = useState(1); // 1: send OTP, 2: verify OTP & set new PIN
+  const [resetEmailOtp, setResetEmailOtp] = useState('');
+  const [resetNewPin, setResetNewPin] = useState('');
+  const [resetConfirmPin, setResetConfirmPin] = useState('');
+  const [resetStatus, setResetStatus] = useState({ success: null, error: null });
+  const [resetLoading, setResetLoading] = useState(false);
+
   useEffect(() => {
     fetchUPIInfo();
     fetchTransactions();
@@ -351,6 +360,62 @@ const UPIPage = () => {
     }
   }, [paymentStatus]);
 
+  // Send OTP to email
+  const handleSendOtp = async () => {
+    setResetLoading(true);
+    setResetStatus({ success: null, error: null });
+    try {
+      const currentToken = typeof window !== 'undefined' ? localStorage.getItem('token') : '';
+      await axiosClient.post('/upi/send-otp', {}, {
+        headers: { Authorization: `Bearer ${currentToken}` }
+      });
+      setResetStep(2);
+      setResetStatus({ success: 'OTP sent to your email.', error: null });
+    } catch (error) {
+      setResetStatus({ success: null, error: error.response?.data?.msg || 'Failed to send OTP' });
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  // Verify OTP and reset PIN
+  const handleResetPin = async () => {
+    setResetLoading(true);
+    setResetStatus({ success: null, error: null });
+    if (!resetEmailOtp || !resetNewPin || !resetConfirmPin) {
+      setResetStatus({ success: null, error: 'All fields are required.' });
+      setResetLoading(false);
+      return;
+    }
+    if (resetNewPin !== resetConfirmPin) {
+      setResetStatus({ success: null, error: 'PINs do not match.' });
+      setResetLoading(false);
+      return;
+    }
+    try {
+      const currentToken = typeof window !== 'undefined' ? localStorage.getItem('token') : '';
+      await axiosClient.post('/upi/reset-pin', {
+        otp: resetEmailOtp,
+        new_pin: resetNewPin
+      }, {
+        headers: { Authorization: `Bearer ${currentToken}` }
+      });
+      setResetStatus({ success: 'PIN reset successful!', error: null });
+      setTimeout(() => {
+        setShowResetPin(false);
+        setResetStep(1);
+        setResetEmailOtp('');
+        setResetNewPin('');
+        setResetConfirmPin('');
+        setResetStatus({ success: null, error: null });
+      }, 2000);
+    } catch (error) {
+      setResetStatus({ success: null, error: error.response?.data?.msg || 'Failed to reset PIN' });
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
       <div className="container py-6 px-4">
@@ -599,6 +664,13 @@ const UPIPage = () => {
                         value={paymentForm.pin}
                         onChange={(e) => setPaymentForm(prev => ({ ...prev, pin: e.target.value }))}
                       />
+                      <button
+                        type="button"
+                        className="text-blue-600 text-xs mt-2 underline"
+                        onClick={() => setShowResetPin(true)}
+                      >
+                        Forgot PIN?
+                      </button>
                     </div>
                     <div className="flex gap-2">
                       <button
@@ -818,6 +890,73 @@ const UPIPage = () => {
                   }}
                 >{loading ? 'Processing...' : 'Confirm'}</button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Reset PIN Modal */}
+        {showResetPin && (
+          <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg relative">
+              <button className="absolute top-2 right-2 text-gray-400 hover:text-gray-600" onClick={() => setShowResetPin(false)}>&times;</button>
+              <h2 className="text-xl font-bold mb-4">Reset UPI PIN</h2>
+              {resetStep === 1 && (
+                <>
+                  <p className="mb-4 text-gray-600">Click below to send an OTP to your registered email.</p>
+                  <button
+                    onClick={handleSendOtp}
+                    disabled={resetLoading}
+                    className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {resetLoading ? 'Sending OTP...' : 'Send OTP to Email'}
+                  </button>
+                </>
+              )}
+              {resetStep === 2 && (
+                <form onSubmit={e => { e.preventDefault(); handleResetPin(); }} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">OTP (from email)</label>
+                    <input
+                      type="text"
+                      className="w-full p-3 border rounded-lg"
+                      value={resetEmailOtp}
+                      onChange={e => setResetEmailOtp(e.target.value)}
+                      disabled={resetLoading}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">New UPI PIN</label>
+                    <input
+                      type="password"
+                      className="w-full p-3 border rounded-lg"
+                      value={resetNewPin}
+                      onChange={e => setResetNewPin(e.target.value)}
+                      maxLength={6}
+                      disabled={resetLoading}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Confirm New PIN</label>
+                    <input
+                      type="password"
+                      className="w-full p-3 border rounded-lg"
+                      value={resetConfirmPin}
+                      onChange={e => setResetConfirmPin(e.target.value)}
+                      maxLength={6}
+                      disabled={resetLoading}
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={resetLoading}
+                    className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {resetLoading ? 'Resetting PIN...' : 'Reset PIN'}
+                  </button>
+                </form>
+              )}
+              {resetStatus.error && <p className="text-red-600 text-sm mt-2">{resetStatus.error}</p>}
+              {resetStatus.success && <p className="text-green-600 text-sm mt-2">{resetStatus.success}</p>}
             </div>
           </div>
         )}
