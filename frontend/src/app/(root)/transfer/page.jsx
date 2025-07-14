@@ -76,6 +76,44 @@ const TransferPage = () => {
   const { user, fetchUserProfile } = useMainContext();
   const router = useRouter();
 
+  // Add UPI transfer tab/section
+  const [activeTab, setActiveTab] = useState('internal'); // 'internal' or 'upi'
+  const [upiData, setUpiData] = useState({ upiId: '', amount: '', pin: '' });
+  const [showUpiPin, setShowUpiPin] = useState(false);
+  const [upiLoading, setUpiLoading] = useState(false);
+
+  // UPI handlers
+  const handleUpiInputChange = (e) => {
+    const { name, value } = e.target;
+    setUpiData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleUpiProceed = (e) => {
+    e.preventDefault();
+    if (!upiData.upiId || !upiData.amount || isNaN(parseFloat(upiData.amount)) || parseFloat(upiData.amount) <= 0) {
+      toast.error('Enter valid UPI ID and amount');
+      return;
+    }
+    setShowUpiPin(true);
+  };
+
+  const handleUpiPinSubmit = async (e) => {
+    e.preventDefault();
+    setUpiLoading(true);
+    // Mock PIN check: accept 1234 as correct
+    setTimeout(() => {
+      setUpiLoading(false);
+      if (upiData.pin === '1234') {
+        toast.success('UPI Transfer Successful!');
+        setUpiData({ upiId: '', amount: '', pin: '' });
+        setShowUpiPin(false);
+        fetchUserProfile();
+      } else {
+        toast.error('Incorrect UPI PIN');
+      }
+    }, 1000);
+  };
+
   // Get user's account information
   const primaryAccount = user?.account_no?.[0];
   const userAccountNumber = (primaryAccount && user?._id) ? generateAccountNumber(user._id, primaryAccount._id, primaryAccount.ac_type) : '';
