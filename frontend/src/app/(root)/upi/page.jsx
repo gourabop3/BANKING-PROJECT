@@ -6,9 +6,17 @@ import { FaDownload, FaShare, FaCopy, FaCheck } from 'react-icons/fa';
 import Card from '@/components/ui/Card';
 import { useMainContext } from '@/context/MainContext';
 import { axiosClient } from '@/utils/AxiosClient';
+import { useRouter } from 'next/navigation';
 
 const UPIPage = () => {
   const { user } = useMainContext();
+  const router = useRouter();
+  useEffect(() => {
+    if (user && user.kyc_status !== 'completed') {
+      router.replace('/customer-service');
+    }
+  }, [user, router]);
+
   const [activeTab, setActiveTab] = useState('pay');
   const [upiInfo, setUpiInfo] = useState(null);
   const [qrCode, setQrCode] = useState(null);

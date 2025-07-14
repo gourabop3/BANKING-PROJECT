@@ -76,6 +76,12 @@ const TransferPage = () => {
   const { user, fetchUserProfile } = useMainContext();
   const router = useRouter();
 
+  useEffect(() => {
+    if (user && user.kyc_status !== 'completed') {
+      router.replace('/customer-service');
+    }
+  }, [user, router]);
+
   // Add UPI transfer tab/section
   const [activeTab, setActiveTab] = useState('internal'); // 'internal' or 'upi'
   const [upiData, setUpiData] = useState({ upiId: '', amount: '', pin: '' });
