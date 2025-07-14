@@ -47,6 +47,9 @@ const UPIPage = () => {
   const [registrationSuccess, setRegistrationSuccess] = useState(null);
   const [paymentStatus, setPaymentStatus] = useState({ success: null, error: null });
 
+  // Add state for two-step UPI pay flow
+  const [showPinStep, setShowPinStep] = useState(false);
+
   useEffect(() => {
     fetchUPIInfo();
     fetchTransactions();
@@ -512,7 +515,6 @@ const UPIPage = () => {
                 <MdSend className="text-blue-600" />
                 Send Money
               </h2>
-              
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -530,6 +532,7 @@ const UPIPage = () => {
                         validateUPI(value);
                       }
                     }}
+                    disabled={showPinStep}
                   />
                   {validationResult && (
                     <div className={`mt-2 text-sm ${validationResult.valid ? 'text-green-600' : 'text-red-600'}`}>
@@ -540,7 +543,6 @@ const UPIPage = () => {
                     </div>
                   )}
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Amount (₹)
@@ -551,19 +553,7 @@ const UPIPage = () => {
                     className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     value={paymentForm.amount}
                     onChange={(e) => setPaymentForm(prev => ({ ...prev, amount: e.target.value }))}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    UPI PIN
-                  </label>
-                  <input
-                    type="password"
-                    placeholder="Enter your UPI PIN"
-                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    value={paymentForm.pin}
-                    onChange={(e) => setPaymentForm(prev => ({ ...prev, pin: e.target.value }))}
+                    disabled={showPinStep}
                   />
                 </div>
                 <div>
@@ -576,22 +566,67 @@ const UPIPage = () => {
                     className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     value={paymentForm.note}
                     onChange={(e) => setPaymentForm(prev => ({ ...prev, note: e.target.value }))}
+                    disabled={showPinStep}
                   />
                 </div>
-
+                {/* Step 1: Proceed button */}
+                {!showPinStep && (
+                  <button
+                    onClick={() => {
+                      if (!paymentForm.recipient_upi || !paymentForm.amount) {
+                        setPaymentStatus({ success: null, error: 'Enter UPI ID and amount' });
+                        return;
+                      }
+                      setShowPinStep(true);
+                    }}
+                    disabled={loading || !paymentForm.recipient_upi || !paymentForm.amount}
+                    className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Proceed
+                  </button>
+                )}
+                {/* Step 2: PIN entry and Send Money button */}
+                {showPinStep && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        UPI PIN
+                      </label>
+                      <input
+                        type="password"
+                        placeholder="Enter your UPI PIN"
+                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        value={paymentForm.pin}
+                        onChange={(e) => setPaymentForm(prev => ({ ...prev, pin: e.target.value }))}
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={async () => {
+                          await processPayment();
+                          setShowPinStep(false);
+                        }}
+                        disabled={loading || !paymentForm.pin}
+                        className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {loading ? 'Processing...' : 'Send Money'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowPinStep(false)}
+                        className="w-full bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+                      >
+                        Back
+                      </button>
+                    </div>
+                  </>
+                )}
                 {paymentStatus.error && (
                   <p className="text-red-600 text-sm">{paymentStatus.error}</p>
                 )}
                 {paymentStatus.success && (
                   <p className="text-green-600 text-sm">{paymentStatus.success}</p>
                 )}
-                <button
-                  onClick={() => setShowConfirm(true)}
-                  disabled={loading || !paymentForm.recipient_upi || !paymentForm.amount || !paymentForm.pin}
-                  className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  {loading ? 'Processing...' : 'Send Money'}
-                </button>
               </div>
             </Card>
           )}
