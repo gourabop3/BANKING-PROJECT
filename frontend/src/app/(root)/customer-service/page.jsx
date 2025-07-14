@@ -41,7 +41,7 @@ export default function CustomerServicePage() {
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
   const bottomRef = useRef(null);
   const chatInputRef = useRef(null);
-  // Add floating widget state
+  // Always open chat on this page
   const [isOpen, setIsOpen] = useState(true);
 
   // Quick reply suggestions based on user authentication
@@ -229,75 +229,61 @@ export default function CustomerServicePage() {
     }
   };
 
-  // Replace main render with floating chat widget
+  // Replace main render with always-open, centered chat widget
   return (
-    <>
-      {/* Floating Chat Button */}
-      {!isOpen && (
-        <button
-          className="fixed bottom-6 right-6 z-50 bg-gradient-to-tr from-blue-600 to-indigo-500 text-white rounded-full shadow-xl w-16 h-16 flex items-center justify-center text-3xl hover:scale-110 transition-all"
-          onClick={() => setIsOpen(true)}
-          aria-label="Open chat bot"
-        >
-          <FaRobot />
-        </button>
-      )}
-      {/* Chat Widget */}
-      {isOpen && (
-        <div className="fixed bottom-6 right-6 z-50 w-80 max-w-full bg-white/80 backdrop-blur-lg rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-blue-100 animate-fadeIn">
-          {/* Header */}
-          <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-500 text-white">
-            <div className="bg-white/30 rounded-full p-2">
-              <FaRobot className="text-2xl text-blue-900" />
-            </div>
-            <div className="flex-1">
-              <div className="font-bold text-base">CBI Assistant</div>
-              <div className="text-xs text-blue-100">Online</div>
-            </div>
-            <button className="text-white text-xl hover:text-blue-200" onClick={() => setIsOpen(false)}>&times;</button>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="w-full max-w-md bg-white/80 backdrop-blur-lg rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-blue-100 animate-fadeIn">
+        {/* Header */}
+        <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-500 text-white">
+          <div className="bg-white/30 rounded-full p-2">
+            <FaRobot className="text-2xl text-blue-900" />
           </div>
-          {/* Chat Body */}
-          <div className="flex-1 flex flex-col gap-2 px-3 py-2 overflow-y-auto bg-white/60" style={{ maxHeight: 400 }}>
-            {messages.map((msg, idx) => (
-              <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`rounded-2xl px-4 py-2 mb-1 max-w-[80%] text-sm shadow ${msg.sender === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-800'}`}>
-                  {msg.sender === 'bot' ? modernizeReply(msg.text) : msg.text}
-                </div>
-              </div>
-            ))}
-            {loading && (
-              <div className="flex justify-start">
-                <div className="rounded-2xl px-4 py-2 mb-1 bg-gray-100 text-gray-500 text-sm animate-pulse">CBI Assistant is typing...</div>
-              </div>
-            )}
-            <div ref={bottomRef} />
+          <div className="flex-1">
+            <div className="font-bold text-base">CBI Assistant</div>
+            <div className="text-xs text-blue-100">Online</div>
           </div>
-          {/* Input Bar */}
-          <form
-            className="flex items-center gap-2 px-3 py-2 bg-white/80 border-t"
-            onSubmit={e => { e.preventDefault(); sendMessage(); }}
-          >
-            <input
-              ref={chatInputRef}
-              type="text"
-              className="flex-1 rounded-xl px-3 py-2 border border-gray-200 focus:ring-2 focus:ring-blue-400 outline-none text-sm bg-white"
-              placeholder="Type your message..."
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              disabled={loading}
-              autoFocus={isOpen}
-            />
-            <button
-              type="submit"
-              className="bg-blue-600 hover:bg-blue-700 text-white rounded-full p-2 text-xl flex items-center justify-center disabled:opacity-50"
-              disabled={loading || !input.trim()}
-              aria-label="Send"
-            >
-              <FaPaperPlane />
-            </button>
-          </form>
         </div>
-      )}
-    </>
+        {/* Chat Body */}
+        <div className="flex-1 flex flex-col gap-2 px-3 py-2 overflow-y-auto bg-white/60" style={{ maxHeight: 500 }}>
+          {messages.map((msg, idx) => (
+            <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div className={`rounded-2xl px-4 py-2 mb-1 max-w-[80%] text-sm shadow ${msg.sender === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-800'}`}>
+                {msg.sender === 'bot' ? modernizeReply(msg.text) : msg.text}
+              </div>
+            </div>
+          ))}
+          {loading && (
+            <div className="flex justify-start">
+              <div className="rounded-2xl px-4 py-2 mb-1 bg-gray-100 text-gray-500 text-sm animate-pulse">CBI Assistant is typing...</div>
+            </div>
+          )}
+          <div ref={bottomRef} />
+        </div>
+        {/* Input Bar */}
+        <form
+          className="flex items-center gap-2 px-3 py-2 bg-white/80 border-t"
+          onSubmit={e => { e.preventDefault(); sendMessage(); }}
+        >
+          <input
+            ref={chatInputRef}
+            type="text"
+            className="flex-1 rounded-xl px-3 py-2 border border-gray-200 focus:ring-2 focus:ring-blue-400 outline-none text-sm bg-white"
+            placeholder="Type your message..."
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            disabled={loading}
+            autoFocus={isOpen}
+          />
+          <button
+            type="submit"
+            className="bg-blue-600 hover:bg-blue-700 text-white rounded-full p-2 text-xl flex items-center justify-center disabled:opacity-50"
+            disabled={loading || !input.trim()}
+            aria-label="Send"
+          >
+            <FaPaperPlane />
+          </button>
+        </form>
+      </div>
+    </div>
   );
 }
