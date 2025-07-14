@@ -21,8 +21,6 @@ const links = [
   { href: '/fd-amount', label: 'Fix Deposit', Icon: GiReceiveMoney },
   { href: '/transactions', label: 'Transactions', Icon: PiNewspaperClipping },
   { href: '/atm-cards', label: 'ATM Cards', Icon: IoCardSharp },
-  { href: '/api-keys', label: 'API Keys', Icon: FaKey },
-  { href: '/api-use', label: 'API Use', Icon: MdIntegrationInstructions },
   { href: '/customer-service', label: 'Customer Service', Icon: AiOutlineRobot },
   { href: '/about', label: 'About', Icon: AiOutlineInfoCircle },
   { href: '/profile', label: 'Profile', Icon: GiFalloutShelter },
