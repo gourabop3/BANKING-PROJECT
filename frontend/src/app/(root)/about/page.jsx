@@ -4,32 +4,44 @@ import { MdPayment, MdAccountBalance, MdSecurity, MdPhoneAndroid, MdReceipt, MdC
 import { AiOutlineMail } from 'react-icons/ai';
 import HeaderName from '@/components/HeaderName';
 
-const frontendTech = [
-  { name: 'Next.js', version: '15.2.4', desc: 'React framework for banking app with SSR for fast page loads and SEO optimization' },
-  { name: 'React', version: '19.0.0', desc: 'Component-based UI library for building interactive banking dashboard and forms' },
-  { name: 'TailwindCSS', version: '4.0', desc: 'Utility-first CSS framework for consistent banking UI design and responsive layouts' },
-  { name: 'Framer Motion', version: '12.23.3', desc: 'Animation library for smooth card transitions and professional UX in banking interface' },
-  { name: 'Axios', version: '1.8.4', desc: 'HTTP client for secure API calls to backend for transactions and user data' },
-  { name: 'Redux Toolkit', version: '2.6.1', desc: 'State management for user authentication, account balance, and transaction history' },
-  { name: 'Formik', version: '2.4.6', desc: 'Form handling library for secure login, registration, and payment forms' },
-  { name: 'Yup', version: '1.6.1', desc: 'Schema validation for banking forms to ensure data integrity and security' },
-  { name: 'React Toastify', version: '11.0.5', desc: 'Notification system for transaction alerts and user feedback in banking app' },
-  { name: 'React Icons', version: '5.5.0', desc: 'Icon library for banking symbols, payment methods, and UI elements' }
+const frontendDependencies = [
+  { name: 'Next.js', desc: 'React framework for server-side rendering and routing in the frontend.' },
+  { name: 'React', desc: 'Component-based UI library for building interactive user interfaces.' },
+  { name: 'TailwindCSS', desc: 'Utility-first CSS framework for styling and responsive layouts.' },
+  { name: 'Framer Motion', desc: 'Animation library for smooth transitions and UI effects.' },
+  { name: 'Axios', desc: 'HTTP client for making API requests to the backend.' },
+  { name: 'Redux Toolkit', desc: 'State management for handling global app state.' },
+  { name: 'Formik', desc: 'Form handling library for managing form state and validation.' },
+  { name: 'Yup', desc: 'Schema validation for form inputs.' },
+  { name: 'React Toastify', desc: 'Notification system for user feedback and alerts.' },
+  { name: 'React Icons', desc: 'Icon library for adding vector icons to the UI.' },
+  { name: 'Headless UI', desc: 'Accessible UI components for modals, dropdowns, etc.' },
+  { name: 'Lucide React', desc: 'Icon set for modern UI icons.' },
+  { name: 'Moment', desc: 'Date and time formatting and manipulation.' },
+  { name: 'React Dropzone', desc: 'File upload component for drag-and-drop uploads.' },
+  { name: 'Pro Sidebar', desc: 'Sidebar navigation component for dashboard layouts.' },
+  { name: 'UUID', desc: 'Unique ID generation for keys and identifiers.' }
 ];
 
-const backendTech = [
-  { name: 'Node.js', version: 'Latest', desc: 'JavaScript runtime for building scalable banking server to handle concurrent transactions' },
-  { name: 'Express.js', version: '5.1.0', desc: 'Web framework for creating RESTful APIs for banking operations like transfers, payments' },
-  { name: 'MongoDB', version: '8.13.2', desc: 'NoSQL database to store user accounts, transaction history, and banking records' },
-  { name: 'JWT', version: '9.0.2', desc: 'Token-based authentication for secure banking sessions and API access' },
-  { name: 'Cloudinary', version: '2.6.1', desc: 'Cloud storage for user profile images, KYC documents, and banking certificates' },
-  { name: 'Razorpay', version: '2.9.6', desc: 'Payment gateway integration for processing real money transactions and UPI payments' },
-  { name: 'OpenAI', version: '4.21.0', desc: 'AI chatbot for 24/7 customer support and banking query assistance' },
-  { name: 'bcryptjs', version: '3.0.2', desc: 'Password encryption library for secure user authentication and data protection' },
-  { name: 'Mongoose', version: '8.13.2', desc: 'MongoDB ODM for structured banking data modeling and validation' },
-  { name: 'Nodemailer', version: '7.0.3', desc: 'Email service for sending transaction receipts, OTP verification, and notifications' },
-  { name: 'Express Validator', version: '7.2.1', desc: 'Input validation middleware for banking forms and API security' },
-  { name: 'Random Int', version: '3.0.0', desc: 'Secure random number generation for ATM card numbers and transaction IDs' }
+const backendDependencies = [
+  { name: 'Node.js', desc: 'JavaScript runtime for running the backend server.' },
+  { name: 'Express.js', desc: 'Web framework for building RESTful APIs.' },
+  { name: 'MongoDB', desc: 'NoSQL database for storing user, account, and transaction data.' },
+  { name: 'Mongoose', desc: 'ODM for MongoDB, providing schema and model support.' },
+  { name: 'JWT', desc: 'Token-based authentication for secure API access.' },
+  { name: 'BcryptJS', desc: 'Password hashing for secure user authentication.' },
+  { name: 'Cloudinary', desc: 'Cloud storage for user profile images and KYC documents.' },
+  { name: 'Razorpay', desc: 'Payment gateway integration for processing payments and recharges.' },
+  { name: 'OpenAI', desc: 'AI chatbot integration for customer support and queries.' },
+  { name: 'Nodemailer', desc: 'Email service for sending notifications and OTPs.' },
+  { name: 'Express Validator', desc: 'Middleware for validating and sanitizing API inputs.' },
+  { name: 'Random Int', desc: 'Random number generation for transaction IDs and card numbers.' },
+  { name: 'Dotenv', desc: 'Environment variable management for configuration.' },
+  { name: 'CORS', desc: 'Cross-Origin Resource Sharing middleware for API security.' },
+  { name: 'Morgan', desc: 'HTTP request logger for backend debugging.' },
+  { name: 'Multer', desc: 'Middleware for handling file uploads.' },
+  { name: 'QRCode', desc: 'QR code generation for UPI and payment features.' },
+  { name: 'Faker', desc: 'Fake data generation for testing and development.' }
 ];
 
 const projectFeatures = [
@@ -73,60 +85,44 @@ export default function AboutPage() {
 
         {/* Technology Stack */}
         <div className="grid lg:grid-cols-2 gap-8 mb-12">
-          {/* Frontend Technologies */}
+          {/* Frontend Dependencies */}
           <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-3 bg-blue-100 rounded-xl">
                 <FaReact className="text-2xl text-blue-600" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">Frontend Technologies</h2>
-                <p className="text-gray-600">Modern UI/UX Development</p>
+                <h2 className="text-2xl font-bold text-gray-900">Frontend Dependencies</h2>
+                <p className="text-gray-600">Key libraries and tools used in the frontend</p>
               </div>
             </div>
-            
-            <div className="space-y-3">
-              {frontendTech.map(({ name, version, desc }) => (
-                <div key={name} className="flex items-start gap-3">
-                  <span className="text-blue-600 text-lg mt-1">•</span>
-                  <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold text-gray-900">{name}</span>
-                      <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded">v{version}</span>
-                    </div>
-                    <p className="text-sm text-gray-600 mt-1">{desc}</p>
-                  </div>
-                </div>
+            <ul className="list-disc pl-6 space-y-2">
+              {frontendDependencies.map(dep => (
+                <li key={dep.name}>
+                  <span className="font-semibold text-gray-900">{dep.name}:</span> <span className="text-gray-700">{dep.desc}</span>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
 
-          {/* Backend Technologies */}
+          {/* Backend Dependencies */}
           <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-3 bg-green-100 rounded-xl">
                 <FaNodeJs className="text-2xl text-green-600" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">Backend Technologies</h2>
-                <p className="text-gray-600">Server-side Development</p>
+                <h2 className="text-2xl font-bold text-gray-900">Backend Dependencies</h2>
+                <p className="text-gray-600">Key libraries and tools used in the backend</p>
               </div>
             </div>
-            
-            <div className="space-y-3">
-              {backendTech.map(({ name, version, desc }) => (
-                <div key={name} className="flex items-start gap-3">
-                  <span className="text-green-600 text-lg mt-1">•</span>
-                  <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold text-gray-900">{name}</span>
-                      <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded">{version}</span>
-                    </div>
-                    <p className="text-sm text-gray-600 mt-1">{desc}</p>
-                  </div>
-                </div>
+            <ul className="list-disc pl-6 space-y-2">
+              {backendDependencies.map(dep => (
+                <li key={dep.name}>
+                  <span className="font-semibold text-gray-900">{dep.name}:</span> <span className="text-gray-700">{dep.desc}</span>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
         </div>
 
