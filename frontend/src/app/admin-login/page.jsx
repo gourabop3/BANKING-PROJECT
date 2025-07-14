@@ -1,46 +1,47 @@
 "use client";
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { axiosClient } from '@/utils/AxiosClient';
+import { toast } from 'react-toastify';
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [form, setForm] = useState({ username: '', password: '' });
+  const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
   const onChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
-    setError('');
   };
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError('');
-    // Hardcoded credentials for demo
-    if (form.username === 'admin@123' && form.password === 'admin123') {
-      localStorage.setItem('admin_token', 'demo_admin_token');
-      router.push('/admin-dashboard');
-    } else {
-      setError('Invalid username or password');
+    try {
+      setLoading(true);
+      const response = await axiosClient.post('/admin/login', form);
+      const data = await response.data;
+      localStorage.setItem('admin_token', data.token);
+      toast.success(data.msg || 'Login success');
+      router.push('/admin/dashboard');
+    } catch (error) {
+      toast.error(error.response?.data?.msg || error.message || 'Login failed');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-purple-200 p-4">
-      <form onSubmit={onSubmit} className="w-full max-w-sm bg-white shadow-xl p-8 rounded-xl">
-        <h2 className="text-3xl font-extrabold mb-6 text-center text-blue-900">Admin Login</h2>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <form onSubmit={onSubmit} className="w-full max-w-sm bg-white shadow p-6 rounded">
+        <h2 className="text-2xl font-bold mb-4 text-center">Admin Login</h2>
+        <div className="mb-3">
+          <label htmlFor="email" className="block mb-1">Email</label>
+          <input type="email" id="email" name="email" value={form.email} onChange={onChange} required className="w-full px-3 py-2 border rounded" />
+        </div>
         <div className="mb-4">
-          <label htmlFor="username" className="block mb-1 font-semibold">Username</label>
-          <input type="text" id="username" name="username" value={form.username} onChange={onChange} required className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-400" autoComplete="username" />
+          <label htmlFor="password" className="block mb-1">Password</label>
+          <input type="password" id="password" name="password" value={form.password} onChange={onChange} required className="w-full px-3 py-2 border rounded" />
         </div>
-        <div className="mb-6">
-          <label htmlFor="password" className="block mb-1 font-semibold">Password</label>
-          <input type="password" id="password" name="password" value={form.password} onChange={onChange} required className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-400" autoComplete="current-password" />
-        </div>
-        {error && <div className="mb-4 text-red-600 text-center font-semibold">{error}</div>}
-        <button disabled={loading} className="w-full bg-blue-700 text-white py-2 rounded font-bold text-lg hover:bg-blue-800 transition disabled:bg-blue-400">
+        <button disabled={loading} className="w-full bg-rose-600 text-white py-2 rounded hover:bg-rose-700 disabled:bg-rose-400">
           {loading ? 'Signing in...' : 'Login'}
         </button>
       </form>
