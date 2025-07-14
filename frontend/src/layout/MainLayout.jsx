@@ -8,6 +8,7 @@ import {ToastContainer} from 'react-toastify'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import 'react-toastify/dist/ReactToastify.css'
 import { usePathname } from 'next/navigation';
+import AppSidebar from '@/components/AppSidebar';
 const MainLayout = ({children}) => {
   const pathname = usePathname();
   // Hide navbar on login and admin-login pages
@@ -18,7 +19,12 @@ const MainLayout = ({children}) => {
     <ToastContainer/>
     <ErrorBoundary>
       {!hideNavbar && <Navbar/>}
-      {children}
+      <div className="flex">
+        {/* Sidebar */}
+        {!hideNavbar && <AppSidebar />}
+        {/* Main content */}
+        <div className="flex-1">{children}</div>
+      </div>
     </ErrorBoundary>
     </MainContextProvider>
     </Provider>
