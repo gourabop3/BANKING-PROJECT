@@ -5,6 +5,7 @@ import { axiosClient } from '@/utils/AxiosClient';
 import { toast } from 'react-toastify';
 import Link from 'next/link';
 import { FaCheckCircle, FaTimesCircle, FaUserEdit, FaUserSlash, FaUserCheck, FaMoneyBillWave } from 'react-icons/fa';
+import AdminSidebar from '../+__(components)/AdminSidebar';
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -56,11 +57,6 @@ export default function AdminDashboardPage() {
     fetchStats();
   }, []);
 
-  const adminLogout = () => {
-    localStorage.removeItem('admin_token');
-    window.location.href = '/admin-login';
-  };
-
   if (!stats) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
@@ -77,86 +73,86 @@ export default function AdminDashboardPage() {
   );
 
   return (
-    <div className="min-h-screen p-6 bg-gradient-to-br from-blue-50 to-purple-100">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-4xl font-extrabold text-blue-900 tracking-tight drop-shadow">Admin Dashboard</h1>
-        <button onClick={adminLogout} className="bg-rose-600 hover:bg-rose-700 transition text-white px-5 py-2 rounded shadow font-semibold">Logout</button>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-        <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
-          <span className="text-2xl font-bold text-blue-700">{stats.userCount}</span>
-          <span className="text-gray-500 mt-1">Total Users</span>
+    <div className="min-h-screen flex bg-gradient-to-br from-blue-50 to-purple-100">
+      <AdminSidebar />
+      <main className="flex-1 p-8 overflow-y-auto">
+        <div className="mb-10">
+          <h1 className="text-4xl font-extrabold text-blue-900 tracking-tight drop-shadow mb-2">Admin Dashboard</h1>
+          <p className="text-lg text-gray-600">Welcome to the modern admin panel. Manage users, KYC, loans, discounts, and more.</p>
         </div>
-        <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
-          <span className="text-2xl font-bold text-green-600">{pending.length}</span>
-          <span className="text-gray-500 mt-1">Pending KYC</span>
-        </div>
-        <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
-          <span className="text-2xl font-bold text-purple-700">{stats.msg}</span>
-          <span className="text-gray-500 mt-1">System Status</span>
-        </div>
-      </div>
-
-      <div className="mb-10">
-        <h2 className="text-2xl font-bold mb-4 text-blue-800 flex items-center gap-2">
-          <FaUserCheck className="text-green-500" /> Pending KYC Applications
-        </h2>
-        {pending.length === 0 ? <p className="text-gray-500">No pending applications.</p> : (
-          <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
-            <table className="min-w-full text-sm text-left">
-              <thead className="border-b bg-blue-50">
-                <tr>
-                  <th className="px-4 py-3">User</th>
-                  <th className="px-4 py-3">Aadhaar</th>
-                  <th className="px-4 py-3">PAN</th>
-                  <th className="px-4 py-3">Mobile</th>
-                  <th className="px-4 py-3">Address</th>
-                  <th className="px-4 py-3">Docs</th>
-                  <th className="px-4 py-3">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pending.map((app) => (
-                  <tr key={app._id} className="border-b hover:bg-blue-50 transition">
-                    <td className="px-4 py-3">
-                      <span className="font-semibold text-blue-900">{app.user?.name}</span><br/>
-                      <span className="text-xs text-gray-500">{app.user?.email}</span>
-                    </td>
-                    <td className="px-4 py-3">{app.aadhaarNumber}</td>
-                    <td className="px-4 py-3">{app.panNumber}</td>
-                    <td className="px-4 py-3">{app.mobileNumber}</td>
-                    <td className="px-4 py-3 max-w-xs truncate" title={app.address}>{app.address}</td>
-                    <td className="px-4 py-3 space-x-2">
-                      <a href={app.documents?.aadhaarImage} target="_blank" className="text-blue-600 underline font-medium">Aadhaar</a>
-                      <a href={app.documents?.panImage} target="_blank" className="text-blue-600 underline font-medium">PAN</a>
-                    </td>
-                    <td className="px-4 py-3 space-x-2 flex items-center">
-                      <button onClick={() => handleApprove(app._id)} className="px-3 py-1 bg-green-600 hover:bg-green-700 transition text-white rounded flex items-center gap-1"><FaCheckCircle /> Approve</button>
-                      <button onClick={() => handleReject(app._id)} className="px-3 py-1 bg-red-600 hover:bg-red-700 transition text-white rounded flex items-center gap-1"><FaTimesCircle /> Reject</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+          <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
+            <span className="text-2xl font-bold text-blue-700">{stats.userCount}</span>
+            <span className="text-gray-500 mt-1">Total Users</span>
           </div>
-        )}
-      </div>
-
-      {/* Users table */}
-      <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-2xl font-bold mb-4 text-blue-800 flex items-center gap-2">
-          <FaUserEdit className="text-amber-500" /> Users
-        </h2>
-
-        <input
-          type="text"
-          placeholder="Search by name or email..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="px-3 py-2 rounded border shadow-sm focus:ring-blue-500 ml-auto w-full md:w-80"
-        />
-      </div>
-      {filteredUsers.length === 0 ? <p className="text-gray-500">No users found.</p> : (
+          <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
+            <span className="text-2xl font-bold text-green-600">{pending.length}</span>
+            <span className="text-gray-500 mt-1">Pending KYC</span>
+          </div>
+          <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
+            <span className="text-2xl font-bold text-purple-700">{stats.msg}</span>
+            <span className="text-gray-500 mt-1">System Status</span>
+          </div>
+        </div>
+        {/* KYC Applications */}
+        <div className="mb-10">
+          <h2 className="text-2xl font-bold mb-4 text-blue-800 flex items-center gap-2">
+            <FaUserCheck className="text-green-500" /> Pending KYC Applications
+          </h2>
+          {pending.length === 0 ? <p className="text-gray-500">No pending applications.</p> : (
+            <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+              <table className="min-w-full text-sm text-left">
+                <thead className="border-b bg-blue-50">
+                  <tr>
+                    <th className="px-4 py-3">User</th>
+                    <th className="px-4 py-3">Aadhaar</th>
+                    <th className="px-4 py-3">PAN</th>
+                    <th className="px-4 py-3">Mobile</th>
+                    <th className="px-4 py-3">Address</th>
+                    <th className="px-4 py-3">Docs</th>
+                    <th className="px-4 py-3">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pending.map((app) => (
+                    <tr key={app._id} className="border-b hover:bg-blue-50 transition">
+                      <td className="px-4 py-3">
+                        <span className="font-semibold text-blue-900">{app.user?.name}</span><br/>
+                        <span className="text-xs text-gray-500">{app.user?.email}</span>
+                      </td>
+                      <td className="px-4 py-3">{app.aadhaarNumber}</td>
+                      <td className="px-4 py-3">{app.panNumber}</td>
+                      <td className="px-4 py-3">{app.mobileNumber}</td>
+                      <td className="px-4 py-3 max-w-xs truncate" title={app.address}>{app.address}</td>
+                      <td className="px-4 py-3 space-x-2">
+                        <a href={app.documents?.aadhaarImage} target="_blank" className="text-blue-600 underline font-medium">Aadhaar</a>
+                        <a href={app.documents?.panImage} target="_blank" className="text-blue-600 underline font-medium">PAN</a>
+                      </td>
+                      <td className="px-4 py-3 space-x-2 flex items-center">
+                        <button onClick={() => handleApprove(app._id)} className="px-3 py-1 bg-green-600 hover:bg-green-700 transition text-white rounded flex items-center gap-1"><FaCheckCircle /> Approve</button>
+                        <button onClick={() => handleReject(app._id)} className="px-3 py-1 bg-red-600 hover:bg-red-700 transition text-white rounded flex items-center gap-1"><FaTimesCircle /> Reject</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+        {/* Users table */}
+        <div className="mb-6 flex items-center justify-between">
+          <h2 className="text-2xl font-bold mb-4 text-blue-800 flex items-center gap-2">
+            <FaUserEdit className="text-amber-500" /> Users
+          </h2>
+          <input
+            type="text"
+            placeholder="Search by name or email..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="px-3 py-2 rounded border shadow-sm focus:ring-blue-500 ml-auto w-full md:w-80"
+          />
+        </div>
+        {filteredUsers.length === 0 ? <p className="text-gray-500">No users found.</p> : (
           <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
             <table className="min-w-full text-sm text-left">
               <thead className="border-b bg-purple-50">
@@ -191,65 +187,64 @@ export default function AdminDashboardPage() {
             </table>
           </div>
         )}
-
-      {/* Transactions table */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold text-blue-800 flex items-center gap-2">
-            <FaMoneyBillWave className="text-green-500" /> Transactions
-          </h2>
-          <input
-            type="text"
-            placeholder="Search transactions..."
-            value={txnSearch}
-            onChange={(e)=>setTxnSearch(e.target.value)}
-            className="px-3 py-2 border rounded shadow-sm focus:ring-blue-500 w-full md:w-80"
-          />
-        </div>
-        {filteredTxns.length === 0 ? <p className="text-gray-500">No transactions.</p> : (
-          <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
-            <table className="min-w-full text-sm text-left">
-              <thead className="border-b bg-teal-50">
-                <tr>
-                  <th className="px-4 py-3">User</th>
-                  <th className="px-4 py-3">Amount</th>
-                  <th className="px-4 py-3">Type</th>
-                  <th className="px-4 py-3">Remark</th>
-                  <th className="px-4 py-3">Date</th>
-                  <th className="px-4 py-3">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredTxns.map(tx => (
-                  <tr key={tx._id} className="border-b hover:bg-teal-50 transition">
-                    <td className="px-4 py-3">
-                      <span className="font-semibold text-blue-900">{tx.user?.name}</span><br/>
-                      <span className="text-xs text-gray-500">{tx.user?.email}</span>
-                    </td>
-                    <td className="px-4 py-3">₹{tx.amount}</td>
-                    <td className="px-4 py-3 capitalize">{tx.type}</td>
-                    <td className="px-4 py-3 max-w-xs truncate" title={tx.remark}>{tx.remark}</td>
-                    <td className="px-4 py-3">{new Date(tx.createdAt).toLocaleString()}</td>
-                    <td className="px-4 py-3">
-                      {tx.isRefunded ? (
-                        <span className="text-green-600 font-medium">Refunded</span>
-                      ) : (
-                        <button
-                          onClick={()=>handleRefund(tx._id)}
-                          className="px-3 py-1 bg-rose-600 hover:bg-rose-700 transition text-white rounded text-sm"
-                        >
-                          Refund
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {/* Transactions table */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold text-blue-800 flex items-center gap-2">
+              <FaMoneyBillWave className="text-green-500" /> Transactions
+            </h2>
+            <input
+              type="text"
+              placeholder="Search transactions..."
+              value={txnSearch}
+              onChange={(e)=>setTxnSearch(e.target.value)}
+              className="px-3 py-2 border rounded shadow-sm focus:ring-blue-500 w-full md:w-80"
+            />
           </div>
-        )}
-      </div>
-
+          {filteredTxns.length === 0 ? <p className="text-gray-500">No transactions.</p> : (
+            <div className="overflow-x-auto bg-white shadow-lg rounded-xl">
+              <table className="min-w-full text-sm text-left">
+                <thead className="border-b bg-teal-50">
+                  <tr>
+                    <th className="px-4 py-3">User</th>
+                    <th className="px-4 py-3">Amount</th>
+                    <th className="px-4 py-3">Type</th>
+                    <th className="px-4 py-3">Remark</th>
+                    <th className="px-4 py-3">Date</th>
+                    <th className="px-4 py-3">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredTxns.map(tx => (
+                    <tr key={tx._id} className="border-b hover:bg-teal-50 transition">
+                      <td className="px-4 py-3">
+                        <span className="font-semibold text-blue-900">{tx.user?.name}</span><br/>
+                        <span className="text-xs text-gray-500">{tx.user?.email}</span>
+                      </td>
+                      <td className="px-4 py-3">₹{tx.amount}</td>
+                      <td className="px-4 py-3 capitalize">{tx.type}</td>
+                      <td className="px-4 py-3 max-w-xs truncate" title={tx.remark}>{tx.remark}</td>
+                      <td className="px-4 py-3">{new Date(tx.createdAt).toLocaleString()}</td>
+                      <td className="px-4 py-3">
+                        {tx.isRefunded ? (
+                          <span className="text-green-600 font-medium">Refunded</span>
+                        ) : (
+                          <button
+                            onClick={()=>handleRefund(tx._id)}
+                            className="px-3 py-1 bg-rose-600 hover:bg-rose-700 transition text-white rounded text-sm"
+                          >
+                            Refund
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </main>
     </div>
   );
 }
