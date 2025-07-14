@@ -421,139 +421,43 @@ const UPIPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
-      <div className="container py-6 px-4">
-        <HeaderName />
-        
-        {/* UPI Registration/Update Card - Show for all users */}
-        <Card className="mb-6 p-6 bg-white shadow-lg">
-          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-            <MdQrCode className="text-blue-600" />
-            {(!upiInfo || !upiInfo.upi_id) ? 'Create Your UPI ID' : 'Update Your UPI ID'}
-          </h2>
-          {(!upiInfo || !upiInfo.upi_id) ? (
-            <p className="text-gray-600 mb-4">Create your unique UPI ID to start making instant payments.</p>
-          ) : (
-            <p className="text-gray-600 mb-4">Current UPI ID: <span className="font-mono font-semibold text-blue-600">{upiInfo.upi_id}</span>. You can update to a new UPI ID below.</p>
-          )}
-            {registrationError && (
-              <p className="text-red-600 text-sm mb-2">{registrationError}</p>
-            )}
-            {registrationSuccess && (
-              <p className="text-green-600 text-sm mb-2">{registrationSuccess}</p>
-            )}
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Desired UPI ID</label>
-                <input
-                  type="text"
-                  placeholder="yourname@cbibank"
-                  className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    formValidation.upi_id ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  value={registrationForm.upi_id}
-                  disabled={loading}
-                  onChange={(e) => {
-                    const value = e.target.value.toLowerCase();
-                    setRegistrationForm(prev => ({ ...prev, upi_id: value }));
-                  }}
-                  onBlur={() => {
-                    if (registrationForm.upi_id && !registrationForm.upi_id.includes('@')) {
-                      setRegistrationForm(prev => ({ ...prev, upi_id: prev.upi_id + '@cbibank' }));
-                    }
-                  }}
-                />
-                {formValidation.upi_id && (
-                  <p className="text-red-600 text-xs mt-1">{formValidation.upi_id}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Set UPI PIN</label>
-                <input
-                  type="password"
-                  className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    formValidation.pin ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  value={registrationForm.pin}
-                  maxLength="6"
-                  placeholder="Enter 4 or 6 digit PIN"
-                  disabled={loading}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/\D/g, '');
-                    setRegistrationForm(prev => ({ ...prev, pin: value }));
-                  }}
-                />
-                {formValidation.pin && (
-                  <p className="text-red-600 text-xs mt-1">{formValidation.pin}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Confirm UPI PIN</label>
-                <input
-                  type="password"
-                  className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    formValidation.confirm_pin ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  value={registrationForm.confirm_pin}
-                  maxLength="6"
-                  placeholder="Confirm your PIN"
-                  disabled={loading}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/\D/g, '');
-                    setRegistrationForm(prev => ({ ...prev, confirm_pin: value }));
-                  }}
-                />
-                {formValidation.confirm_pin && (
-                  <p className="text-red-600 text-xs mt-1">{formValidation.confirm_pin}</p>
-                )}
-              </div>
-              <button
-                onClick={registerUPI}
-                disabled={loading}
-                className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 transition-colors"
-              >
-                {loading ? 'Creating...' : ((!upiInfo || !upiInfo.upi_id) ? 'Create UPI ID' : 'Update UPI ID')}
-              </button>
-            </div>
-        </Card>
-
-        {/* Header Section */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            CBI Bank UPI
-          </h1>
-          <p className="text-lg text-gray-600">
-            Fast, Secure & Instant Payments
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100">
+      <div className="max-w-4xl mx-auto py-10 px-4">
+        {/* Hero Header */}
+        <div className="flex flex-col items-center mb-10">
+          <div className="bg-gradient-to-tr from-blue-600 to-indigo-500 rounded-full p-4 shadow-lg mb-4">
+            <MdQrCode className="text-white text-5xl" />
+          </div>
+          <h1 className="text-4xl font-extrabold text-gray-900 mb-2 tracking-tight">CBI Bank UPI</h1>
+          <p className="text-lg text-gray-600 mb-2">Fast, Secure & Instant Payments</p>
         </div>
 
         {/* UPI Info Card */}
         {upiInfo && (
-          <Card className="mb-6 p-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Your UPI ID</h3>
-                <div className="flex items-center gap-2">
-                  <span className="text-xl font-mono">{upiInfo.upi_id}</span>
-                  <button
-                    onClick={copyUPIId}
-                    className="p-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors"
-                  >
-                    {copied ? <FaCheck className="text-green-400" /> : <FaCopy />}
-                  </button>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-sm opacity-90">Available Balance</p>
-                <p className="text-2xl font-bold">{formatCurrency(upiInfo.balance)}</p>
+          <div className="backdrop-blur-md bg-white/70 rounded-2xl shadow-xl flex flex-col md:flex-row items-center justify-between px-8 py-6 mb-8 border border-blue-100">
+            <div className="flex flex-col items-center md:items-start">
+              <span className="text-gray-500 text-xs mb-1">Your UPI ID</span>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-2xl font-mono font-semibold text-blue-700">{upiInfo.upi_id}</span>
+                <button
+                  onClick={copyUPIId}
+                  className="p-2 bg-blue-100 rounded-lg hover:bg-blue-200 transition-colors"
+                  title="Copy UPI ID"
+                >
+                  {copied ? <FaCheck className="text-green-500" /> : <FaCopy className="text-blue-700" />}
+                </button>
               </div>
             </div>
-          </Card>
+            <div className="text-center md:text-right mt-4 md:mt-0">
+              <span className="text-gray-500 text-xs">Available Balance</span>
+              <div className="text-2xl font-bold text-indigo-700">{formatCurrency(upiInfo.balance)}</div>
+            </div>
+          </div>
         )}
 
         {/* Navigation Tabs */}
-        <div className="flex justify-center mb-6">
-          <div className="bg-white rounded-lg p-1 shadow-md">
+        <div className="flex justify-center mb-8">
+          <div className="bg-white/80 rounded-full p-1 shadow-md flex gap-2">
             {[
               { id: 'pay', label: 'Pay', icon: MdSend },
               { id: 'receive', label: 'Receive', icon: MdQrCode },
@@ -562,10 +466,10 @@ const UPIPage = () => {
               <button
                 key={id}
                 onClick={() => setActiveTab(id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
+                className={`flex items-center gap-2 px-6 py-2 rounded-full font-semibold transition-all duration-200 text-base focus:outline-none focus:ring-2 focus:ring-blue-400 ${
                   activeTab === id
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-600 hover:bg-gray-100'
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg scale-105'
+                    : 'text-gray-600 hover:bg-blue-100'
                 }`}
               >
                 <Icon />
@@ -579,9 +483,9 @@ const UPIPage = () => {
         <div className="max-w-2xl mx-auto">
           {/* Pay Tab */}
           {activeTab === 'pay' && (
-            <Card className="p-6">
-              <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                <MdSend className="text-blue-600" />
+            <div className="bg-white/90 rounded-2xl shadow-xl p-8 mb-8">
+              <h2 className="text-2xl font-bold mb-6 flex items-center gap-2 text-blue-700">
+                <MdSend />
                 Send Money
               </h2>
               <div className="space-y-4">
@@ -649,14 +553,14 @@ const UPIPage = () => {
                       setShowPinStep(true);
                     }}
                     disabled={loading || !paymentForm.recipient_upi || !paymentForm.amount}
-                    className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl font-semibold hover:scale-105 hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Proceed
                   </button>
                 )}
                 {/* Step 2: PIN entry and Send Money button */}
                 {showPinStep && (
-                  <>
+                  <div className="rounded-xl bg-blue-50 p-4 mt-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         UPI PIN
@@ -676,45 +580,44 @@ const UPIPage = () => {
                         Forgot PIN?
                       </button>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 mt-4">
                       <button
                         onClick={async () => {
                           await processPayment();
                           setShowPinStep(false);
                         }}
                         disabled={loading || !paymentForm.pin}
-                        className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl font-semibold hover:scale-105 hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {loading ? 'Processing...' : 'Send Money'}
                       </button>
                       <button
                         type="button"
                         onClick={() => setShowPinStep(false)}
-                        className="w-full bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+                        className="w-full bg-gray-200 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-300 transition-colors"
                       >
                         Back
                       </button>
                     </div>
-                  </>
+                  </div>
                 )}
                 {paymentStatus.error && (
-                  <p className="text-red-600 text-sm">{paymentStatus.error}</p>
+                  <p className="text-red-600 text-sm mt-2">{paymentStatus.error}</p>
                 )}
                 {paymentStatus.success && (
-                  <p className="text-green-600 text-sm">{paymentStatus.success}</p>
+                  <p className="text-green-600 text-sm mt-2">{paymentStatus.success}</p>
                 )}
               </div>
-            </Card>
+            </div>
           )}
 
           {/* Receive Tab */}
           {activeTab === 'receive' && (
-            <Card className="p-6">
-              <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                <MdQrCode className="text-blue-600" />
+            <div className="bg-white/90 rounded-2xl shadow-xl p-8 mb-8">
+              <h2 className="text-2xl font-bold mb-6 flex items-center gap-2 text-blue-700">
+                <MdQrCode />
                 Receive Money
               </h2>
-
               <div className="space-y-4 mb-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -728,7 +631,6 @@ const UPIPage = () => {
                     onChange={(e) => setQrForm(prev => ({ ...prev, amount: e.target.value }))}
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Note - Optional
@@ -741,19 +643,17 @@ const UPIPage = () => {
                     onChange={(e) => setQrForm(prev => ({ ...prev, note: e.target.value }))}
                   />
                 </div>
-
                 <button
                   onClick={generateQR}
                   disabled={loading}
-                  className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl font-semibold hover:scale-105 hover:shadow-lg transition-all disabled:opacity-50"
                 >
                   {loading ? 'Generating...' : 'Generate QR Code'}
                 </button>
               </div>
-
               {qrCode && (
                 <div className="text-center">
-                  <div className="bg-white p-4 rounded-lg border-2 border-gray-200 inline-block">
+                  <div className="bg-white p-4 rounded-2xl border-2 border-gray-200 inline-block shadow-lg">
                     <img 
                       src={qrCode.qr} 
                       alt="UPI QR Code" 
@@ -782,17 +682,16 @@ const UPIPage = () => {
                   </div>
                 </div>
               )}
-            </Card>
+            </div>
           )}
 
           {/* History Tab */}
           {activeTab === 'history' && (
-            <Card className="p-6">
-              <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                <MdHistory className="text-blue-600" />
+            <div className="bg-white/90 rounded-2xl shadow-xl p-8 mb-8">
+              <h2 className="text-2xl font-bold mb-6 flex items-center gap-2 text-blue-700">
+                <MdHistory />
                 Transaction History
               </h2>
-
               <div className="space-y-4">
                 {transactions.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
@@ -801,7 +700,7 @@ const UPIPage = () => {
                   </div>
                 ) : (
                   transactions.map((transaction, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                    <div key={index} className="flex items-center justify-between p-4 border rounded-xl hover:bg-gray-50 transition-colors">
                       <div className="flex items-center gap-3">
                         <div className={`p-2 rounded-full ${
                           transaction.type === 'credit' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
@@ -839,7 +738,7 @@ const UPIPage = () => {
                   ))
                 )}
               </div>
-            </Card>
+            </div>
           )}
         </div>
 
@@ -862,20 +761,21 @@ const UPIPage = () => {
               description: "Transfer money anytime, anywhere"
             }
           ].map((feature, index) => (
-            <Card key={index} className="p-6 text-center">
+            <div key={index} className="bg-white/90 rounded-2xl shadow-xl p-6 text-center hover:scale-105 transition-transform">
               <div className="mb-4 flex justify-center">
                 {feature.icon}
               </div>
               <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
               <p className="text-gray-600 text-sm">{feature.description}</p>
-            </Card>
+            </div>
           ))}
         </div>
 
         {/* Confirmation Modal */}
         {showConfirm && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md animate-scaleIn">
+            <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl animate-scaleIn relative">
+              <button className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 text-2xl" onClick={() => setShowConfirm(false)}>&times;</button>
               <h3 className="text-xl font-bold mb-4">Confirm Payment</h3>
               <p className="mb-2">Recipient: <span className="font-semibold">{paymentForm.recipient_upi}</span></p>
               <p className="mb-2">Amount: <span className="font-semibold">₹{paymentForm.amount}</span></p>
@@ -887,7 +787,7 @@ const UPIPage = () => {
                 >Cancel</button>
                 <button
                   disabled={loading}
-                  className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                  className="px-4 py-2 rounded-md bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:scale-105 hover:shadow-lg disabled:opacity-50"
                   onClick={() => {
                     setShowConfirm(false);
                     processPayment();
@@ -901,8 +801,8 @@ const UPIPage = () => {
         {/* Reset PIN Modal */}
         {showResetPin && (
           <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg relative">
-              <button className="absolute top-2 right-2 text-gray-400 hover:text-gray-600" onClick={() => setShowResetPin(false)}>&times;</button>
+            <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
+              <button className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 text-2xl" onClick={() => setShowResetPin(false)}>&times;</button>
               <h2 className="text-xl font-bold mb-4">Reset UPI PIN</h2>
               {resetStep === 1 && (
                 <>
@@ -910,7 +810,7 @@ const UPIPage = () => {
                   <button
                     onClick={handleSendOtp}
                     disabled={resetLoading}
-                    className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50"
+                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2 rounded-xl font-semibold hover:scale-105 hover:shadow-lg disabled:opacity-50"
                   >
                     {resetLoading ? 'Sending OTP...' : 'Send OTP to Email'}
                   </button>
@@ -953,7 +853,7 @@ const UPIPage = () => {
                   <button
                     type="submit"
                     disabled={resetLoading}
-                    className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50"
+                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2 rounded-xl font-semibold hover:scale-105 hover:shadow-lg disabled:opacity-50"
                   >
                     {resetLoading ? 'Resetting PIN...' : 'Reset PIN'}
                   </button>
