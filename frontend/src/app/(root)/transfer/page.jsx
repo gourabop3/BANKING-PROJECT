@@ -250,16 +250,13 @@ const TransferPage = () => {
         },
       });
 
-      if (response.data.success) {
+      if (response.data && response.data.success) {
         const { transferId, transactionDetails } = response.data;
-        
         // Animate balance update
         setBalanceAnimation(true);
         setTimeout(() => setBalanceAnimation(false), 2000);
-        
         await fetchUserProfile();
         toast.success('Transfer successful! Balance updated.');
-        
         setTimeout(() => {
           const params = new URLSearchParams({
             txnId: transferId,
@@ -270,12 +267,21 @@ const TransferPage = () => {
             mode: transferMode,
             ts: Date.now()
           });
-          
           router.push(`/transfer-success?${params.toString()}`);
         }, 1500);
+      } else {
+        // If API returns success: false
+        toast.error(response.data?.msg || 'Transfer failed');
       }
     } catch (error) {
-      toast.error(error?.response?.data?.msg || 'Transfer failed');
+      // Robust error handling: show toast, never crash
+      let msg = 'Transfer failed';
+      if (error?.response?.data?.msg) {
+        msg = error.response.data.msg;
+      } else if (error?.message) {
+        msg = error.message;
+      }
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
