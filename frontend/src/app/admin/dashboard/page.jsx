@@ -5,7 +5,7 @@ import { axiosClient } from '@/utils/AxiosClient';
 import { toast } from 'react-toastify';
 import Link from 'next/link';
 import { FaCheckCircle, FaTimesCircle, FaUserEdit, FaUserSlash, FaUserCheck, FaMoneyBillWave } from 'react-icons/fa';
-import AdminSidebar from '../+__(components)/AdminSidebar';
+import AdminSidebar from '../../(root)/admin/+__(components)/AdminSidebar';
 
 export default function AdminDashboardPage() {
   const router = useRouter();
