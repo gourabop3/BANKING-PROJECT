@@ -8,15 +8,29 @@ import Link from "next/link";
 import HeaderName from "@/components/HeaderName";
 import { useMainContext } from "@/context/MainContext";
 import { FaEye,FaEyeSlash } from "react-icons/fa";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from 'react-toastify';
 import { generateAccountNumber, generateIFSCCode, formatAccountNumber, getAccountTypeDisplayName, maskAccountNumber } from '@/utils/accountUtils';
 import Card from '@/components/ui/Card';
+import { useRouter } from "next/navigation";
 
 const HomePage=()=>{
+  const {user} = useMainContext();
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
 
-  const {user} = useMainContext()
+  useEffect(() => {
+    const token = localStorage.getItem('user_token');
+    if (!token) {
+      router.replace('/login');
+    } else {
+      setLoading(false);
+    }
+  }, [router]);
 
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
 
   const dashboard_data = [
     {
