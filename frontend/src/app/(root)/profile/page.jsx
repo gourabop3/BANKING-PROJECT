@@ -44,6 +44,62 @@ const ProfilePage = () => {
   const [activeTab, setActiveTab] = useState('personal')
   const imageRef = useRef(null)
   const [tabIndex, setTabIndex] = useState(0);
+  // Security tab state
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordMsg, setPasswordMsg] = useState(null);
+  // Preferences tab state
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('darkMode') === 'true');
+  const [notifications, setNotifications] = useState(() => localStorage.getItem('notifications') !== 'false');
+
+  // Apply dark mode class to body
+  useEffect(() => {
+    if (darkMode) {
+      document.body.classList.add('dark');
+    } else {
+      document.body.classList.remove('dark');
+    }
+    localStorage.setItem('darkMode', darkMode);
+  }, [darkMode]);
+
+  // Notifications toggle persistence
+  useEffect(() => {
+    localStorage.setItem('notifications', notifications);
+  }, [notifications]);
+
+  // Change password handler
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setPasswordMsg(null);
+    if (!oldPassword || !newPassword || !confirmPassword) {
+      setPasswordMsg({ type: 'error', text: 'All fields are required.' });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordMsg({ type: 'error', text: 'New passwords do not match.' });
+      return;
+    }
+    setPasswordLoading(true);
+    try {
+      const res = await axiosClient.post('/auth/change-password', {
+        oldPassword,
+        newPassword
+      }, {
+        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+      });
+      setPasswordMsg({ type: 'success', text: res.data.msg || 'Password changed successfully.' });
+      setOldPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err) {
+      setPasswordMsg({ type: 'error', text: err.response?.data?.msg || 'Failed to change password.' });
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
 
   const validationSchema = yup.object({
     name: yup.string().required("Name is Required"),
@@ -299,19 +355,46 @@ const ProfilePage = () => {
               <div className="space-y-6">
                 <div className="flex items-center gap-3">
                   <FaLock className="text-blue-600 text-xl" />
-                  <span className="font-semibold text-gray-800">Change Password <span className='ml-2 text-xs text-gray-400'>(Coming Soon)</span></span>
+                  <span className="font-semibold text-gray-800">Change Password</span>
                 </div>
-                <div className="bg-blue-50 rounded-xl p-4 opacity-60 cursor-not-allowed">
+                <div className="bg-blue-50 rounded-xl p-4">
                   <p className="text-sm text-gray-600 mb-2">Change your account password for better security.</p>
-                  <button className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2 rounded-xl font-semibold" disabled>Change Password</button>
-                </div>
-                <div className="flex items-center gap-3">
-                  <FaShieldAlt className="text-green-600 text-xl" />
-                  <span className="font-semibold text-gray-800">Two-Factor Authentication <span className='ml-2 text-xs text-gray-400'>(Coming Soon)</span></span>
-                </div>
-                <div className="bg-green-50 rounded-xl p-4 flex items-center justify-between opacity-60 cursor-not-allowed">
-                  <span className="text-sm text-gray-700">Enable 2FA for extra protection</span>
-                  <button className="bg-green-600 text-white px-4 py-2 rounded-xl font-semibold" disabled>Enable 2FA</button>
+                  <form onSubmit={handleChangePassword} className="space-y-3 max-w-md">
+                    <input
+                      type="password"
+                      className="w-full px-4 py-2 rounded border border-gray-300 focus:ring-2 focus:ring-blue-400 outline-none"
+                      placeholder="Old Password"
+                      value={oldPassword}
+                      onChange={e => setOldPassword(e.target.value)}
+                      disabled={passwordLoading}
+                    />
+                    <input
+                      type="password"
+                      className="w-full px-4 py-2 rounded border border-gray-300 focus:ring-2 focus:ring-blue-400 outline-none"
+                      placeholder="New Password"
+                      value={newPassword}
+                      onChange={e => setNewPassword(e.target.value)}
+                      disabled={passwordLoading}
+                    />
+                    <input
+                      type="password"
+                      className="w-full px-4 py-2 rounded border border-gray-300 focus:ring-2 focus:ring-blue-400 outline-none"
+                      placeholder="Confirm New Password"
+                      value={confirmPassword}
+                      onChange={e => setConfirmPassword(e.target.value)}
+                      disabled={passwordLoading}
+                    />
+                    <button
+                      type="submit"
+                      className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2 rounded-xl font-semibold hover:scale-105 transition-all disabled:opacity-50"
+                      disabled={passwordLoading}
+                    >
+                      {passwordLoading ? 'Changing...' : 'Change Password'}
+                    </button>
+                    {passwordMsg && (
+                      <div className={`text-sm mt-2 ${passwordMsg.type === 'error' ? 'text-red-600' : 'text-green-600'}`}>{passwordMsg.text}</div>
+                    )}
+                  </form>
                 </div>
               </div>
             </Tab.Panel>
@@ -345,19 +428,29 @@ const ProfilePage = () => {
               <div className="space-y-6">
                 <div className="flex items-center gap-3">
                   <FaCog className="text-indigo-600 text-xl" />
-                  <span className="font-semibold text-gray-800">Theme <span className='ml-2 text-xs text-gray-400'>(Coming Soon)</span></span>
+                  <span className="font-semibold text-gray-800">Theme</span>
                 </div>
-                <div className="bg-indigo-50 rounded-xl p-4 flex items-center gap-4 opacity-60 cursor-not-allowed">
-                  <button className="bg-indigo-600 text-white px-4 py-2 rounded-xl font-semibold" disabled>Light</button>
-                  <button className="bg-gray-800 text-white px-4 py-2 rounded-xl font-semibold" disabled>Dark</button>
+                <div className="bg-indigo-50 rounded-xl p-4 flex items-center gap-4">
+                  <span className="text-sm text-gray-700">Dark Mode</span>
+                  <button
+                    className={`px-4 py-2 rounded-xl font-semibold transition-all ${darkMode ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+                    onClick={() => setDarkMode(!darkMode)}
+                  >
+                    {darkMode ? 'On' : 'Off'}
+                  </button>
                 </div>
                 <div className="flex items-center gap-3">
                   <FaBell className="text-yellow-500 text-xl" />
-                  <span className="font-semibold text-gray-800">Notifications <span className='ml-2 text-xs text-gray-400'>(Coming Soon)</span></span>
+                  <span className="font-semibold text-gray-800">Notifications</span>
                 </div>
-                <div className="bg-yellow-50 rounded-xl p-4 flex items-center gap-4 opacity-60 cursor-not-allowed">
+                <div className="bg-yellow-50 rounded-xl p-4 flex items-center gap-4">
                   <span className="text-sm text-gray-700">Email Alerts</span>
-                  <button className="bg-yellow-400 text-white px-4 py-2 rounded-xl font-semibold" disabled>Enable</button>
+                  <button
+                    className={`px-4 py-2 rounded-xl font-semibold transition-all ${notifications ? 'bg-yellow-400 text-white' : 'bg-gray-200 text-gray-700'}`}
+                    onClick={() => setNotifications(!notifications)}
+                  >
+                    {notifications ? 'On' : 'Off'}
+                  </button>
                 </div>
               </div>
             </Tab.Panel>
