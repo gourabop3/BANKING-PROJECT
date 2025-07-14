@@ -1,12 +1,10 @@
 "use client";
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { FaUser, FaCog, FaSignOutAlt, FaTachometerAlt } from 'react-icons/fa';
+import { FaSignOutAlt, FaTachometerAlt } from 'react-icons/fa';
 
 const sidebarLinks = [
   { label: 'Dashboard', href: '/admin-dashboard', icon: <FaTachometerAlt />, active: true },
-  { label: 'Users', href: '/admin-dashboard/users', icon: <FaUser /> },
-  { label: 'Settings', href: '/admin-dashboard/settings', icon: <FaCog /> },
 ];
 
 export default function AdminDashboard() {
