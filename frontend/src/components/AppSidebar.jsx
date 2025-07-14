@@ -46,23 +46,6 @@ const skills = [
 
 function SkillsGrid() {
   const [active, setActive] = useState(null);
-  const keyRefs = useRef([]);
-
-  useEffect(() => {
-    keyRefs.current.forEach((ref, i) => {
-      if (ref) {
-        gsap.set(ref, { scale: 1 });
-      }
-    });
-  }, []);
-
-  const handleKey = (i) => {
-    setActive(i);
-    if (keyRefs.current[i]) {
-      gsap.fromTo(keyRefs.current[i], { scale: 1 }, { scale: 1.2, yoyo: true, repeat: 1, duration: 0.2 });
-    }
-  };
-
   return (
     <div className="mt-4">
       <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
@@ -71,11 +54,9 @@ function SkillsGrid() {
           return (
             <button
               key={skill.name}
-              ref={el => keyRefs.current[i] = el}
               className={`flex flex-col items-center p-2 rounded-lg shadow transition-all focus:outline-none ${active === i ? 'bg-gray-100' : 'bg-white'}`}
               style={{ color: skill.color }}
-              onClick={() => handleKey(i)}
-              onMouseEnter={() => handleKey(i)}
+              onClick={() => setActive(i)}
               tabIndex={0}
             >
               <Icon className="text-2xl sm:text-3xl" />
@@ -85,7 +66,7 @@ function SkillsGrid() {
         })}
       </div>
       {active !== null && (
-        <div className="mt-3 text-center text-sm text-gray-700 min-h-[32px]">
+        <div className="mt-3 text-center text-sm text-gray-700 min-h-[32px] animate-fade-in">
           <b>{skills[active].name}:</b> {skills[active].desc}
         </div>
       )}
