@@ -34,6 +34,7 @@ import {
 } from 'react-icons/fa';
 import { MdVerified, MdPending, MdError, MdAccountBalance, MdSecurity } from 'react-icons/md';
 import HeaderName from '@/components/HeaderName';
+import { Tab } from '@headlessui/react';
 
 const ProfilePage = () => {
   const { user, fetchUserProfile } = useMainContext()
@@ -42,6 +43,7 @@ const ProfilePage = () => {
   const [imageLoading, setImageLoading] = useState(false)
   const [activeTab, setActiveTab] = useState('personal')
   const imageRef = useRef(null)
+  const [tabIndex, setTabIndex] = useState(0);
 
   const validationSchema = yup.object({
     name: yup.string().required("Name is Required"),
@@ -124,19 +126,19 @@ const ProfilePage = () => {
   const kycStatus = getKYCStatus()
 
   return (
-    <div className="min-h-screen flex flex-col items-center bg-gradient-to-br from-gray-50 to-blue-50 py-12">
-      <div className="relative w-full max-w-md mb-8">
-        {/* Floating Profile Image */}
-        <div className="absolute left-1/2 -top-16 -translate-x-1/2 z-10">
-          <div className="w-32 h-32 rounded-full bg-white p-2 shadow-lg relative">
+    <div className="min-h-screen flex flex-col items-center bg-gradient-to-br from-blue-50 to-indigo-100 py-12">
+      {/* Hero Card */}
+      <div className="relative w-full max-w-2xl mb-8">
+        <div className="absolute left-1/2 -top-20 -translate-x-1/2 z-10">
+          <div className="w-40 h-40 rounded-full bg-white/80 p-2 shadow-2xl relative border-4 border-blue-200">
             {imageLoading ? (
               <div className="w-full h-full flex justify-center items-center">
-                <CgSpinner className='animate-spin text-4xl text-indigo-600' />
+                <CgSpinner className='animate-spin text-5xl text-indigo-600' />
               </div>
             ) : (
               <img 
                 src={image ? URL.createObjectURL(image) : user?.image || '/default-avatar.png'} 
-                className="border rounded-full shadow-sm w-full h-full object-cover" 
+                className="border rounded-full shadow-lg w-full h-full object-cover" 
                 alt="Profile" 
               />
             )}
@@ -150,18 +152,24 @@ const ProfilePage = () => {
             <button 
               disabled={imageLoading} 
               onClick={onFilePickHandler} 
-              className="absolute bottom-2 right-2 shadow-lg text-indigo-600 bg-white rounded-full p-2 text-lg hover:bg-gray-50 transition-colors"
+              className="absolute bottom-3 right-3 shadow-lg text-indigo-600 bg-white rounded-full p-3 text-2xl hover:bg-gray-50 transition-colors border border-blue-200"
+              title="Change photo"
             >
               <CiCamera />
             </button>
           </div>
         </div>
-        {/* Modern Profile Card */}
-        <div className="pt-20 pb-8 px-6 bg-white/90 rounded-2xl shadow-2xl flex flex-col items-center">
-          <h1 className="text-2xl font-bold mb-1 mt-2 text-gray-900">{user?.name || 'User Name'}</h1>
-          <span className="text-gray-500 text-sm mb-1">{user?.email}</span>
-          <span className="text-gray-400 text-xs mb-3">{user?.bio || 'No bio added yet'}</span>
-          {/* Badges */}
+        <div className="pt-28 pb-8 px-8 bg-white/90 rounded-3xl shadow-2xl flex flex-col items-center border border-blue-100">
+          <h1 className="text-3xl font-extrabold mb-1 mt-2 text-gray-900 flex items-center gap-2">
+            {user?.name || 'User Name'}
+            {verificationStatus.status === 'verified' && <MdVerified className="text-green-500" title="Email Verified" />}
+          </h1>
+          <div className="flex flex-col md:flex-row gap-2 items-center mb-2">
+            <span className="text-gray-500 text-base flex items-center gap-1"><FaEnvelope className="inline" /> {user?.email}</span>
+            {!user?.isEmailVerified && <VerifiedEMailModel />}
+            <span className="text-gray-500 text-base flex items-center gap-1"><FaPhone className="inline" /> {user?.mobile_no}</span>
+          </div>
+          <span className="text-gray-400 text-sm mb-3">{user?.bio || 'No bio added yet'}</span>
           <div className="flex gap-2 mb-4">
             <span className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${verificationStatus.bg} ${verificationStatus.color} bg-opacity-90`}>
               {verificationStatus.icon}
@@ -172,106 +180,218 @@ const ProfilePage = () => {
               {kycStatus.text}
             </span>
           </div>
-          {/* Stats */}
-          <div className="flex gap-6 mt-2">
-            <div className="flex flex-col items-center px-4 py-2 bg-gray-50 rounded-xl shadow-sm">
-              <span className="text-lg font-bold text-gray-900">{user?.account_no?.length || 0}</span>
-              <span className="text-xs text-gray-500">Accounts</span>
+          <div className="flex gap-8 mt-2">
+            <div className="flex flex-col items-center px-6 py-2 bg-blue-50 rounded-xl shadow-sm">
+              <span className="text-xl font-bold text-blue-900">{user?.account_no?.length || 0}</span>
+              <span className="text-xs text-blue-700">Accounts</span>
             </div>
-            <div className="flex flex-col items-center px-4 py-2 bg-gray-50 rounded-xl shadow-sm">
-              <span className="text-lg font-bold text-gray-900">100%</span>
-              <span className="text-xs text-gray-500">Profile</span>
+            <div className="flex flex-col items-center px-6 py-2 bg-blue-50 rounded-xl shadow-sm">
+              <span className="text-xl font-bold text-blue-900">100%</span>
+              <span className="text-xs text-blue-700">Profile</span>
             </div>
           </div>
         </div>
       </div>
-      {/* Update Profile Form */}
-      <div className="w-full max-w-md bg-white/90 rounded-2xl shadow-xl p-8">
-        <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-indigo-700">
-          <FaEdit /> Update Profile
-        </h2>
-        <Formik 
-          validationSchema={validationSchema} 
-          initialValues={{
-            name: user?.name || '',
-            mobile_no: user?.mobile_no || '',
-            bio: user?.bio || ''
-          }}
-          enableReinitialize={true}
-          onSubmit={onSubmitHandler}
-        >
-          <Form className="space-y-5">
-            <div>
-              <label htmlFor="name" className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                <FaUser className="text-indigo-600" />
-                Full Name <span className="text-red-500">*</span>
-              </label>
-              <Field 
-                id="name" 
-                name="name" 
-                type="text" 
-                className='w-full py-3 px-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-colors' 
-                placeholder='Enter Your Full Name' 
-              />
-              <ErrorMessage name="name" className='text-red-500 text-sm' component={'p'} />
-            </div>
-            <div>
-              <label htmlFor="email" className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                <FaEnvelope className="text-indigo-600" />
-                Email Address
-              </label>
-              <div className="flex items-center gap-2">
-                <input 
-                  readOnly 
-                  id="email" 
-                  value={user?.email || ''} 
-                  type="text" 
-                  className='w-full py-3 px-4 bg-gray-100 border border-gray-300 rounded-xl outline-none' 
-                  placeholder='Email Address' 
-                />
-                {!user?.isEmailVerified && <VerifiedEMailModel />}
+      {/* Tabs */}
+      <div className="w-full max-w-2xl bg-white/90 rounded-3xl shadow-xl p-6 border border-blue-100">
+        <Tab.Group selectedIndex={tabIndex} onChange={setTabIndex}>
+          <Tab.List className="flex gap-2 mb-6">
+            {['Personal Info', 'Security', 'Account Details', 'Preferences', 'Activity', 'Danger Zone'].map((tab, idx) => (
+              <Tab
+                key={tab}
+                className={({ selected }) =>
+                  `px-4 py-2 rounded-full text-sm font-semibold transition-all ${selected ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow' : 'bg-blue-50 text-blue-700 hover:bg-blue-100'}`
+                }
+              >
+                {tab}
+              </Tab>
+            ))}
+          </Tab.List>
+          <Tab.Panels>
+            {/* Personal Info Tab */}
+            <Tab.Panel>
+              {/* Update Profile Form (as before) */}
+              <Formik 
+                validationSchema={validationSchema} 
+                initialValues={{
+                  name: user?.name || '',
+                  mobile_no: user?.mobile_no || '',
+                  bio: user?.bio || ''
+                }}
+                enableReinitialize={true}
+                onSubmit={onSubmitHandler}
+              >
+                <Form className="space-y-5">
+                  <div>
+                    <label htmlFor="name" className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                      <FaUser className="text-indigo-600" />
+                      Full Name <span className="text-red-500">*</span>
+                    </label>
+                    <Field 
+                      id="name" 
+                      name="name" 
+                      type="text" 
+                      className='w-full py-3 px-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-colors' 
+                      placeholder='Enter Your Full Name' 
+                    />
+                    <ErrorMessage name="name" className='text-red-500 text-sm' component={'p'} />
+                  </div>
+                  <div>
+                    <label htmlFor="email" className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                      <FaEnvelope className="text-indigo-600" />
+                      Email Address
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input 
+                        readOnly 
+                        id="email" 
+                        value={user?.email || ''} 
+                        type="text" 
+                        className='w-full py-3 px-4 bg-gray-100 border border-gray-300 rounded-xl outline-none' 
+                        placeholder='Email Address' 
+                      />
+                      {!user?.isEmailVerified && <VerifiedEMailModel />}
+                    </div>
+                  </div>
+                  <div>
+                    <label htmlFor="mobile_no" className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                      <FaPhone className="text-indigo-600" />
+                      Mobile Number <span className="text-red-500">*</span>
+                    </label>
+                    <Field 
+                      name="mobile_no" 
+                      type="text"
+                      id="mobile_no" 
+                      onInput={onlyInputNumber}
+                      className='w-full py-3 px-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-colors' 
+                      placeholder='Enter Mobile Number' 
+                    />
+                    <ErrorMessage name="mobile_no" className='text-red-500 text-sm' component={'p'} />
+                  </div>
+                  <div>
+                    <label htmlFor="bio" className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                      <FaEdit className="text-indigo-600" />
+                      Bio
+                    </label>
+                    <Field 
+                      name="bio" 
+                      as="textarea"
+                      id="bio"  
+                      rows="3" 
+                      className='w-full py-3 px-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-colors resize-none' 
+                      placeholder='Tell us about yourself...' 
+                    />
+                    <ErrorMessage name="bio" className='text-red-500 text-sm' component={'p'} />
+                  </div>
+                  <div>
+                    <CustomAuthButton 
+                      isLoading={loader} 
+                      text={'Update Profile'} 
+                      className='bg-indigo-600 hover:bg-indigo-700 text-white py-3 px-8 rounded-xl font-medium transition-colors' 
+                      type='submit' 
+                    />
+                  </div>
+                </Form>
+              </Formik>
+            </Tab.Panel>
+            {/* Security Tab */}
+            <Tab.Panel>
+              <div className="space-y-6">
+                <div className="flex items-center gap-3">
+                  <FaLock className="text-blue-600 text-xl" />
+                  <span className="font-semibold text-gray-800">Change Password</span>
+                </div>
+                <div className="bg-blue-50 rounded-xl p-4">
+                  <p className="text-sm text-gray-600 mb-2">Change your account password for better security.</p>
+                  <button className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2 rounded-xl font-semibold hover:scale-105 transition-all">Change Password</button>
+                </div>
+                <div className="flex items-center gap-3">
+                  <FaShieldAlt className="text-green-600 text-xl" />
+                  <span className="font-semibold text-gray-800">Two-Factor Authentication</span>
+                </div>
+                <div className="bg-green-50 rounded-xl p-4 flex items-center justify-between">
+                  <span className="text-sm text-gray-700">Enable 2FA for extra protection</span>
+                  <button className="bg-green-600 text-white px-4 py-2 rounded-xl font-semibold hover:bg-green-700 transition-all">Enable 2FA</button>
+                </div>
               </div>
-            </div>
-            <div>
-              <label htmlFor="mobile_no" className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                <FaPhone className="text-indigo-600" />
-                Mobile Number <span className="text-red-500">*</span>
-              </label>
-              <Field 
-                name="mobile_no" 
-                type="text"
-                id="mobile_no" 
-                onInput={onlyInputNumber}
-                className='w-full py-3 px-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-colors' 
-                placeholder='Enter Mobile Number' 
-              />
-              <ErrorMessage name="mobile_no" className='text-red-500 text-sm' component={'p'} />
-            </div>
-            <div>
-              <label htmlFor="bio" className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                <FaEdit className="text-indigo-600" />
-                Bio
-              </label>
-              <Field 
-                name="bio" 
-                as="textarea"
-                id="bio"  
-                rows="3" 
-                className='w-full py-3 px-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-colors resize-none' 
-                placeholder='Tell us about yourself...' 
-              />
-              <ErrorMessage name="bio" className='text-red-500 text-sm' component={'p'} />
-            </div>
-            <div>
-              <CustomAuthButton 
-                isLoading={loader} 
-                text={'Update Profile'} 
-                className='bg-indigo-600 hover:bg-indigo-700 text-white py-3 px-8 rounded-xl font-medium transition-colors' 
-                type='submit' 
-              />
-            </div>
-          </Form>
-        </Formik>
+            </Tab.Panel>
+            {/* Account Details Tab */}
+            <Tab.Panel>
+              <div className="space-y-6">
+                <div className="flex items-center gap-3">
+                  <MdAccountBalance className="text-blue-600 text-xl" />
+                  <span className="font-semibold text-gray-800">Account Numbers</span>
+                </div>
+                <div className="bg-blue-50 rounded-xl p-4">
+                  <p className="text-sm text-gray-600 mb-2">Your linked account numbers:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {(user?.account_no || []).map((acc, idx) => (
+                      <span key={idx} className="bg-white border border-blue-200 px-4 py-2 rounded-xl font-mono text-blue-700 text-sm">{acc}</span>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <FaCoins className="text-green-600 text-xl" />
+                  <span className="font-semibold text-gray-800">UPI ID</span>
+                </div>
+                <div className="bg-green-50 rounded-xl p-4 flex items-center gap-2">
+                  <span className="font-mono text-green-700">{user?.upi_id || 'Not Set'}</span>
+                  <button className="bg-green-600 text-white px-3 py-1 rounded-xl font-semibold hover:bg-green-700 transition-all text-xs">Copy</button>
+                </div>
+              </div>
+            </Tab.Panel>
+            {/* Preferences Tab */}
+            <Tab.Panel>
+              <div className="space-y-6">
+                <div className="flex items-center gap-3">
+                  <FaCog className="text-indigo-600 text-xl" />
+                  <span className="font-semibold text-gray-800">Theme</span>
+                </div>
+                <div className="bg-indigo-50 rounded-xl p-4 flex items-center gap-4">
+                  <button className="bg-indigo-600 text-white px-4 py-2 rounded-xl font-semibold hover:bg-indigo-700 transition-all">Light</button>
+                  <button className="bg-gray-800 text-white px-4 py-2 rounded-xl font-semibold hover:bg-gray-900 transition-all">Dark</button>
+                </div>
+                <div className="flex items-center gap-3">
+                  <FaBell className="text-yellow-500 text-xl" />
+                  <span className="font-semibold text-gray-800">Notifications</span>
+                </div>
+                <div className="bg-yellow-50 rounded-xl p-4 flex items-center gap-4">
+                  <span className="text-sm text-gray-700">Email Alerts</span>
+                  <button className="bg-yellow-400 text-white px-4 py-2 rounded-xl font-semibold hover:bg-yellow-500 transition-all">Enable</button>
+                </div>
+              </div>
+            </Tab.Panel>
+            {/* Activity Tab */}
+            <Tab.Panel>
+              <div className="space-y-6">
+                <div className="flex items-center gap-3">
+                  <FaHistory className="text-purple-600 text-xl" />
+                  <span className="font-semibold text-gray-800">Recent Activity</span>
+                </div>
+                <div className="bg-purple-50 rounded-xl p-4">
+                  <p className="text-sm text-gray-600 mb-2">Recent logins and device info (placeholder):</p>
+                  <ul className="text-xs text-gray-700 list-disc pl-4">
+                    <li>2024-06-01 10:23 - Chrome on Windows</li>
+                    <li>2024-05-30 18:12 - Mobile App</li>
+                  </ul>
+                </div>
+              </div>
+            </Tab.Panel>
+            {/* Danger Zone Tab */}
+            <Tab.Panel>
+              <div className="space-y-6">
+                <div className="flex items-center gap-3">
+                  <FaExclamationTriangle className="text-red-600 text-xl" />
+                  <span className="font-semibold text-red-700">Danger Zone</span>
+                </div>
+                <div className="bg-red-50 rounded-xl p-4">
+                  <p className="text-sm text-red-600 mb-2">Delete your account permanently. This action cannot be undone.</p>
+                  <button className="bg-red-600 text-white px-6 py-2 rounded-xl font-semibold hover:bg-red-700 transition-all">Delete Account</button>
+                </div>
+              </div>
+            </Tab.Panel>
+          </Tab.Panels>
+        </Tab.Group>
       </div>
     </div>
   )
