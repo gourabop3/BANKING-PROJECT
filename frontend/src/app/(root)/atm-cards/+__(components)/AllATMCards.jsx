@@ -64,13 +64,13 @@ const AllATMCards = () => {
   const getCardGradient = (type) => {
     switch (type.toLowerCase()) {
       case "basic":
-        return "from-slate-800 via-slate-700 to-slate-600"; // Better contrast for basic
+        return "from-blue-400 via-blue-500 to-purple-500"; // Vibrant blue-purple
       case "classic":
-        return "from-indigo-600 via-purple-600 to-pink-600"; // Vibrant and visible
+        return "from-pink-500 via-purple-500 to-indigo-500"; // Pink-purple-indigo
       case "platinum":
-        return "from-gray-500 via-gray-400 to-gray-300"; // Light platinum look
+        return "from-yellow-400 via-yellow-200 to-white"; // Gold/white platinum
       default:
-        return "from-blue-600 via-blue-700 to-blue-800"; // Default blue gradient
+        return "from-teal-400 via-cyan-500 to-blue-500"; // Teal-cyan-blue
     }
   };
 
