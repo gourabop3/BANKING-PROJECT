@@ -22,17 +22,16 @@ const FDCard = ({data, isUpdate, setIsUpdate}) => {
     const applyFor = data.apply_for || 'Fixed Deposit'
     const isActive = !data.isClaimed
     
-    // Robust date parsing for FD
+    // Prefer createdAt for FD date, fallback to date
     let depositDate;
-    if (data.date) {
-        if (!isNaN(Number(data.date))) {
-            // If it's a timestamp (number or string)
-            depositDate = moment.unix(Number(data.date));
+    const fdDate = data.createdAt || data.date;
+    if (fdDate) {
+        if (!isNaN(Number(fdDate))) {
+            depositDate = moment.unix(Number(fdDate));
         } else {
-            // Try ISO or other string
-            depositDate = moment.utc(data.date, moment.ISO_8601, true);
+            depositDate = moment.utc(fdDate, moment.ISO_8601, true);
             if (!depositDate.isValid()) {
-                depositDate = moment(); // fallback
+                depositDate = moment();
             }
         }
     } else {
