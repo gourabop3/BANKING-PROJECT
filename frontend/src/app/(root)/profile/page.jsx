@@ -196,7 +196,7 @@ const ProfilePage = () => {
       <div className="w-full max-w-2xl bg-white/90 rounded-3xl shadow-xl p-6 border border-blue-100">
         <Tab.Group selectedIndex={tabIndex} onChange={setTabIndex}>
           <Tab.List className="flex gap-2 mb-6">
-            {['Personal Info', 'Security', 'Account Details', 'Preferences', 'Activity', 'Danger Zone'].map((tab, idx) => (
+            {['Personal Info', 'Security', 'Account Details', 'Preferences', 'Activity'].map((tab, idx) => (
               <Tab
                 key={tab}
                 className={({ selected }) =>
@@ -299,19 +299,19 @@ const ProfilePage = () => {
               <div className="space-y-6">
                 <div className="flex items-center gap-3">
                   <FaLock className="text-blue-600 text-xl" />
-                  <span className="font-semibold text-gray-800">Change Password</span>
+                  <span className="font-semibold text-gray-800">Change Password <span className='ml-2 text-xs text-gray-400'>(Coming Soon)</span></span>
                 </div>
-                <div className="bg-blue-50 rounded-xl p-4">
+                <div className="bg-blue-50 rounded-xl p-4 opacity-60 cursor-not-allowed">
                   <p className="text-sm text-gray-600 mb-2">Change your account password for better security.</p>
-                  <button className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2 rounded-xl font-semibold hover:scale-105 transition-all">Change Password</button>
+                  <button className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2 rounded-xl font-semibold" disabled>Change Password</button>
                 </div>
                 <div className="flex items-center gap-3">
                   <FaShieldAlt className="text-green-600 text-xl" />
-                  <span className="font-semibold text-gray-800">Two-Factor Authentication</span>
+                  <span className="font-semibold text-gray-800">Two-Factor Authentication <span className='ml-2 text-xs text-gray-400'>(Coming Soon)</span></span>
                 </div>
-                <div className="bg-green-50 rounded-xl p-4 flex items-center justify-between">
+                <div className="bg-green-50 rounded-xl p-4 flex items-center justify-between opacity-60 cursor-not-allowed">
                   <span className="text-sm text-gray-700">Enable 2FA for extra protection</span>
-                  <button className="bg-green-600 text-white px-4 py-2 rounded-xl font-semibold hover:bg-green-700 transition-all">Enable 2FA</button>
+                  <button className="bg-green-600 text-white px-4 py-2 rounded-xl font-semibold" disabled>Enable 2FA</button>
                 </div>
               </div>
             </Tab.Panel>
@@ -345,19 +345,19 @@ const ProfilePage = () => {
               <div className="space-y-6">
                 <div className="flex items-center gap-3">
                   <FaCog className="text-indigo-600 text-xl" />
-                  <span className="font-semibold text-gray-800">Theme</span>
+                  <span className="font-semibold text-gray-800">Theme <span className='ml-2 text-xs text-gray-400'>(Coming Soon)</span></span>
                 </div>
-                <div className="bg-indigo-50 rounded-xl p-4 flex items-center gap-4">
-                  <button className="bg-indigo-600 text-white px-4 py-2 rounded-xl font-semibold hover:bg-indigo-700 transition-all">Light</button>
-                  <button className="bg-gray-800 text-white px-4 py-2 rounded-xl font-semibold hover:bg-gray-900 transition-all">Dark</button>
+                <div className="bg-indigo-50 rounded-xl p-4 flex items-center gap-4 opacity-60 cursor-not-allowed">
+                  <button className="bg-indigo-600 text-white px-4 py-2 rounded-xl font-semibold" disabled>Light</button>
+                  <button className="bg-gray-800 text-white px-4 py-2 rounded-xl font-semibold" disabled>Dark</button>
                 </div>
                 <div className="flex items-center gap-3">
                   <FaBell className="text-yellow-500 text-xl" />
-                  <span className="font-semibold text-gray-800">Notifications</span>
+                  <span className="font-semibold text-gray-800">Notifications <span className='ml-2 text-xs text-gray-400'>(Coming Soon)</span></span>
                 </div>
-                <div className="bg-yellow-50 rounded-xl p-4 flex items-center gap-4">
+                <div className="bg-yellow-50 rounded-xl p-4 flex items-center gap-4 opacity-60 cursor-not-allowed">
                   <span className="text-sm text-gray-700">Email Alerts</span>
-                  <button className="bg-yellow-400 text-white px-4 py-2 rounded-xl font-semibold hover:bg-yellow-500 transition-all">Enable</button>
+                  <button className="bg-yellow-400 text-white px-4 py-2 rounded-xl font-semibold" disabled>Enable</button>
                 </div>
               </div>
             </Tab.Panel>
@@ -374,19 +374,6 @@ const ProfilePage = () => {
                     <li>2024-06-01 10:23 - Chrome on Windows</li>
                     <li>2024-05-30 18:12 - Mobile App</li>
                   </ul>
-                </div>
-              </div>
-            </Tab.Panel>
-            {/* Danger Zone Tab */}
-            <Tab.Panel>
-              <div className="space-y-6">
-                <div className="flex items-center gap-3">
-                  <FaExclamationTriangle className="text-red-600 text-xl" />
-                  <span className="font-semibold text-red-700">Danger Zone</span>
-                </div>
-                <div className="bg-red-50 rounded-xl p-4">
-                  <p className="text-sm text-red-600 mb-2">Delete your account permanently. This action cannot be undone.</p>
-                  <button className="bg-red-600 text-white px-6 py-2 rounded-xl font-semibold hover:bg-red-700 transition-all">Delete Account</button>
                 </div>
               </div>
             </Tab.Panel>
