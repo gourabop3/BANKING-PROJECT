@@ -21,7 +21,7 @@ class RechargeService {
      * Process mobile recharge
      */
     static async processMobileRecharge(rechargeData, userId) {
-        const { mobileNumber, operator, amount, rechargeType } = rechargeData;
+        const { mobileNumber, operator, amount, rechargeType, mode } = rechargeData;
 
         // Validate input
         if (!mobileNumber || !operator || !amount) {
@@ -50,6 +50,17 @@ class RechargeService {
         // Check sufficient balance
         if (account.amount < amount) {
             throw new ApiError(400, "Insufficient balance for recharge");
+        }
+
+        // Real mode: Placeholder for real recharge API integration
+        if (mode === 'real') {
+            // TODO: Replace this block with your real recharge API call
+            // Example:
+            // const apiUrl = process.env.REAL_RECHARGE_API_URL;
+            // const apiKey = process.env.REAL_RECHARGE_API_KEY;
+            // const response = await axios.post(apiUrl, { mobileNumber, operator, amount, apiKey });
+            // if (response.data.status === 'success') { ... } else { throw new ApiError(500, ...); }
+            throw new ApiError(501, "Real recharge API integration not implemented yet. Add your API call here.");
         }
 
         // Start database transaction
