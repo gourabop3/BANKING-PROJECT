@@ -231,6 +231,7 @@ const TransferPage = () => {
   };
 
   const confirmTransfer = async () => {
+    console.log("confirmTransfer called", transferMode, transferData, recipientDetails);
     setLoading(true);
     try {
       const endpoint = transferMode === 'internal' ? '/transfer/initiate' : '/transfer/external';
@@ -243,6 +244,7 @@ const TransferPage = () => {
         amount: parseFloat(transferData.amount),
         recipientDetails: recipientDetails || {}
       };
+      console.log("About to send transfer request", endpoint, payload);
 
       const response = await axiosClient.post(endpoint, payload, {
         headers: {
@@ -272,7 +274,7 @@ const TransferPage = () => {
         toast.error(response.data?.msg || 'Transfer failed');
       }
     } catch (error) {
-      console.log('Transfer error:', error); // Log the error for debugging
+      console.log('Transfer error:', error);
       let msg = 'Transfer failed';
       if (error?.response?.data?.msg) {
         msg = error.response.data.msg;
