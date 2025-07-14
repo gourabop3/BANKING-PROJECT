@@ -150,6 +150,31 @@ class UPIController {
             next(err);
         }
     }
+
+    /**
+     * Send OTP to user's email for UPI PIN reset
+     */
+    static async sendResetPinOTP(req, res, next) {
+        try {
+            const result = await UPIService.sendResetPinOTP(req.user);
+            res.json(result);
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    /**
+     * Verify OTP and reset the UPI PIN
+     */
+    static async resetUPIPin(req, res, next) {
+        try {
+            const { otp, new_pin } = req.body;
+            const result = await UPIService.resetUPIPin(req.user, { otp, new_pin });
+            res.json(result);
+        } catch (err) {
+            next(err);
+        }
+    }
 }
 
 module.exports = UPIController;

@@ -26,4 +26,8 @@ router.get('/validate/:upi_id', UPIController.validateUPI);
 router.get('/limits', UPIController.getLimits);
 router.get('/info', UPIController.getUserUPIInfo);
 
+// PIN reset
+router.post('/send-otp', UPIController.sendResetPinOTP);
+router.post('/reset-pin', UPIController.resetUPIPin);
+
 module.exports = router;

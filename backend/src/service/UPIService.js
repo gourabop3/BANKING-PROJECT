@@ -7,6 +7,15 @@ const ApiError = require('../utils/ApiError');
 const mongoose = require('mongoose');
 const NodeMailerService = require('../utils/NodeMail');
 
+// Simple in-memory store for UPI PIN reset OTPs
+// Key -> userId (string); value -> { otp: string, expiry: number }
+const upiPinOtpStore = new Map();
+
+// Helper to validate PIN format (4 or 6 digits)
+function isValidPin(pin) {
+  return /^\d{4}$|^\d{6}$/.test(pin);
+}
+
 class UPIService {
     /**
      * Generate a QR code (base64 PNG) for the given user's UPI ID.
@@ -446,6 +455,95 @@ class UPIService {
             console.error('Error sending payment success email:', error);
             // Don't throw error as email failure shouldn't fail the payment
         }
+    }
+
+    /**
+     * Send an OTP to the user's registered email for PIN reset
+     */
+    static async sendResetPinOTP(userId) {
+        const user = await UserModel.findById(userId).select('email name upi_id');
+        if (!user) {
+            throw new ApiError(404, 'User not found');
+        }
+        if (!user.upi_id) {
+            throw new ApiError(400, 'UPI ID not set for the user');
+        }
+
+        const otp = require('random-int')(100000, 999999).toString();
+
+        // Store OTP with 10-minute expiry
+        upiPinOtpStore.set(userId.toString(), {
+            otp,
+            expiry: Date.now() + 10 * 60 * 1000,
+        });
+
+        // Send OTP via email
+        const emailHtml = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+                <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                    <h2 style="color: #2563eb; text-align: center;">Reset Your UPI PIN</h2>
+                    <p>Dear ${user.name},</p>
+                    <p>We received a request to reset your UPI PIN for CBI Bank UPI (ID: <strong>${user.upi_id}</strong>).</p>
+                    <p>Please use the following One-Time Password (OTP) to reset your PIN. This OTP is valid for <strong>10 minutes</strong>.</p>
+                    <div style="text-align: center; margin: 30px 0;">
+                        <span style="font-size: 32px; font-weight: bold; color: #2563eb; background-color: #f0f9ff; padding: 15px 30px; border-radius: 10px; letter-spacing: 5px;">${otp}</span>
+                    </div>
+                    <p>If you did not initiate this request, please ignore this email or contact support immediately.</p>
+                    <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
+                    <p style="color: #6b7280; font-size: 12px; text-align: center;">This is an automated email from CBI Bank. Please do not reply.</p>
+                </div>
+            </div>`;
+
+        await NodeMailerService.sendEmail({
+            to: user.email,
+            subject: 'CBI Bank – UPI PIN Reset OTP',
+            html: emailHtml,
+        });
+
+        return { msg: 'OTP sent to registered email' };
+    }
+
+    /**
+     * Verify OTP and reset the user's UPI PIN
+     */
+    static async resetUPIPin(userId, { otp, new_pin }) {
+        if (!otp || !new_pin) {
+            throw new ApiError(400, 'OTP and new PIN are required');
+        }
+
+        if (!isValidPin(new_pin)) {
+            throw new ApiError(400, 'PIN must be 4 or 6 digits');
+        }
+
+        const storeEntry = upiPinOtpStore.get(userId.toString());
+        if (!storeEntry) {
+            throw new ApiError(400, 'OTP not requested or expired');
+        }
+        if (Date.now() > storeEntry.expiry) {
+            upiPinOtpStore.delete(userId.toString());
+            throw new ApiError(400, 'OTP has expired. Please request a new one');
+        }
+        if (storeEntry.otp !== otp) {
+            throw new ApiError(400, 'Invalid OTP');
+        }
+
+        // All good – update PIN
+        const hashedPin = await bcryptjs.hash(new_pin, 10);
+
+        const updated = await UserModel.findByIdAndUpdate(
+            userId,
+            { upi_pin: hashedPin },
+            { new: true }
+        ).select('upi_id');
+
+        // Clean up OTP entry
+        upiPinOtpStore.delete(userId.toString());
+
+        if (!updated) {
+            throw new ApiError(404, 'User not found');
+        }
+
+        return { msg: 'UPI PIN reset successful' };
     }
 }
 
