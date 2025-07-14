@@ -25,6 +25,30 @@ class RechargeController {
         }
     }
 
+    static demoRecharge = async (req, res) => {
+        try {
+            const result = await RechargeService.processDemoRecharge(req.body, req.user);
+            res.status(200).json(result);
+        } catch (error) {
+            res.status(400).json({ 
+                success: false, 
+                msg: error.message || "Demo recharge failed" 
+            });
+        }
+    }
+
+    static realRecharge = async (req, res) => {
+        try {
+            const result = await RechargeService.processRealRecharge(req.body, req.user);
+            res.status(200).json(result);
+        } catch (error) {
+            res.status(400).json({ 
+                success: false, 
+                msg: error.message || "Real recharge failed" 
+            });
+        }
+    }
+
     static getRechargeHistory = async (req, res) => {
         try {
             const result = await RechargeService.getRechargeHistory(req.user);

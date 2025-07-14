@@ -78,6 +78,11 @@ const Schema = new mongoose.Schema({
     processedAt: {
         type: Date
     },
+    // Demo mode flag
+    isDemo: {
+        type: Boolean,
+        default: false
+    },
     // Metadata for additional details
     metadata: {
         type: mongoose.Schema.Types.Mixed,

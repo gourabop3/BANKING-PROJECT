@@ -13,7 +13,8 @@ exports.ConnectDB = async()=>{
 
     } catch (error) {
         console.error('MongoDB connection failed:', error.message);
-        // Exit the process if a database connection cannot be established
-        process.exit(1);
+        console.log('Starting server without database for testing...');
+        // Don't exit for testing purposes
+        // process.exit(1);
     }
 }

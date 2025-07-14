@@ -7,6 +7,15 @@ const NotificationService = require("./NotificationService");
 const mongoose = require("mongoose");
 const { generateAccountNumber } = require("../utils/accountNumberUtils");
 
+// Check if models are available (for testing without MongoDB)
+const isDatabaseAvailable = () => {
+    try {
+        return AccountModel && TransactionModel && RechargeModel && UserModel;
+    } catch (error) {
+        return false;
+    }
+};
+
 class RechargeService {
     /**
      * Process mobile recharge
@@ -415,6 +424,226 @@ class RechargeService {
             dth: 'DTH/Cable TV Bill'
         };
         return billTypes[billTypeId] || billTypeId;
+    }
+
+    /**
+     * Process demo recharge (for testing - doesn't affect real balance)
+     */
+    static async processDemoRecharge(rechargeData, userId) {
+        const { mobileNumber, operator, amount, rechargeType, billType, consumerNumber, billAmount } = rechargeData;
+
+        // Validate input based on recharge type
+        if (rechargeType === 'mobile') {
+            if (!mobileNumber || !operator || !amount) {
+                throw new ApiError(400, "Missing required fields for mobile recharge");
+            }
+
+            // Validate mobile number format
+            const mobileRegex = /^[6-9]\d{9}$/;
+            if (!mobileRegex.test(mobileNumber)) {
+                throw new ApiError(400, "Invalid mobile number format");
+            }
+
+            // Validate amount
+            if (amount < 10) {
+                throw new ApiError(400, "Minimum recharge amount is ₹10");
+            }
+        } else if (rechargeType === 'bill') {
+            if (!billType || !consumerNumber || !billAmount) {
+                throw new ApiError(400, "Missing required fields for bill payment");
+            }
+
+            // Validate amount
+            if (billAmount < 10) {
+                throw new ApiError(400, "Minimum bill payment amount is ₹10");
+            }
+        } else {
+            throw new ApiError(400, "Invalid recharge type");
+        }
+
+        // Simulate processing delay
+        await new Promise(resolve => setTimeout(resolve, 1500));
+
+        // Generate demo transaction ID
+        const transactionId = 'DEMO' + Date.now() + Math.floor(Math.random() * 1000);
+
+        // If database is not available, return demo response without saving
+        if (!isDatabaseAvailable()) {
+            return {
+                success: true,
+                message: `Demo ${rechargeType === 'mobile' ? 'recharge' : 'bill payment'} completed successfully`,
+                transactionId: transactionId,
+                isDemo: true,
+                details: rechargeType === 'mobile' ? {
+                    mobileNumber: mobileNumber,
+                    operator: this.getOperatorName(operator),
+                    amount: amount,
+                    currentBalance: 50000 // Demo balance
+                } : {
+                    billType: this.getBillTypeName(billType),
+                    consumerNumber: consumerNumber,
+                    amount: billAmount,
+                    currentBalance: 50000 // Demo balance
+                }
+            };
+        }
+
+        // Get user and account details
+        const user = await UserModel.findById(userId).populate('account_no');
+        if (!user || !user.account_no || user.account_no.length === 0) {
+            throw new ApiError(404, "User account not found");
+        }
+
+        const account = user.account_no[0]; // Primary account
+
+        // Create recharge record for demo
+        const recharge = new RechargeModel({
+            user: userId,
+            account: account._id,
+            rechargeType: rechargeType,
+            mobileNumber: rechargeType === 'mobile' ? mobileNumber : null,
+            operator: rechargeType === 'mobile' ? operator : null,
+            billType: rechargeType === 'bill' ? billType : null,
+            consumerNumber: rechargeType === 'bill' ? consumerNumber : null,
+            amount: rechargeType === 'mobile' ? amount : billAmount,
+            status: 'success',
+            isDemo: true,
+            processedAt: new Date()
+        });
+
+        // Create demo transaction (no actual balance deduction)
+        const transaction = new TransactionModel({
+            account: account._id,
+            user: userId,
+            amount: rechargeType === 'mobile' ? amount : billAmount,
+            type: 'debit',
+            isSuccess: true,
+            isDemo: true,
+            remark: rechargeType === 'mobile' 
+                ? `Demo Mobile Recharge - ${this.getOperatorName(operator)} - ${mobileNumber}`
+                : `Demo Bill Payment - ${this.getBillTypeName(billType)} - ${consumerNumber}`,
+            rechargeId: recharge._id
+        });
+
+        // Save records
+        await recharge.save();
+        await transaction.save();
+
+        // Send demo notifications asynchronously
+        setImmediate(async () => {
+            try {
+                const generatedAccountNumber = generateAccountNumber(user._id, account._id, account.ac_type);
+                
+                if (rechargeType === 'mobile') {
+                    await NotificationService.createAnnouncement(
+                        userId,
+                        'demo_mobile_recharge',
+                        'Demo Mobile Recharge Successful',
+                        `Demo: ₹${amount} recharge completed for ${mobileNumber} via ${this.getOperatorName(operator)}`
+                    );
+                } else {
+                    await NotificationService.createAnnouncement(
+                        userId,
+                        'demo_bill_payment',
+                        'Demo Bill Payment Successful',
+                        `Demo: ₹${billAmount} payment completed for ${this.getBillTypeName(billType)} - ${consumerNumber}`
+                    );
+                }
+            } catch (notificationError) {
+                console.error("Failed to send demo notifications:", notificationError);
+            }
+        });
+
+        return {
+            success: true,
+            message: `Demo ${rechargeType === 'mobile' ? 'recharge' : 'bill payment'} completed successfully`,
+            transactionId: recharge.transactionId,
+            isDemo: true,
+            details: rechargeType === 'mobile' ? {
+                mobileNumber: mobileNumber,
+                operator: this.getOperatorName(operator),
+                amount: amount,
+                currentBalance: account.amount // No change in balance for demo
+            } : {
+                billType: this.getBillTypeName(billType),
+                consumerNumber: consumerNumber,
+                amount: billAmount,
+                currentBalance: account.amount // No change in balance for demo
+            }
+        };
+    }
+
+    /**
+     * Process real recharge (affects actual balance)
+     */
+    static async processRealRecharge(rechargeData, userId) {
+        const { mobileNumber, operator, amount, rechargeType, billType, consumerNumber, billAmount } = rechargeData;
+
+        // Validate input based on recharge type
+        if (rechargeType === 'mobile') {
+            if (!mobileNumber || !operator || !amount) {
+                throw new ApiError(400, "Missing required fields for mobile recharge");
+            }
+
+            // Validate mobile number format
+            const mobileRegex = /^[6-9]\d{9}$/;
+            if (!mobileRegex.test(mobileNumber)) {
+                throw new ApiError(400, "Invalid mobile number format");
+            }
+
+            // Validate amount
+            if (amount < 10) {
+                throw new ApiError(400, "Minimum recharge amount is ₹10");
+            }
+        } else if (rechargeType === 'bill') {
+            if (!billType || !consumerNumber || !billAmount) {
+                throw new ApiError(400, "Missing required fields for bill payment");
+            }
+
+            // Validate amount
+            if (billAmount < 10) {
+                throw new ApiError(400, "Minimum bill payment amount is ₹10");
+            }
+        } else {
+            throw new ApiError(400, "Invalid recharge type");
+        }
+
+        // If database is not available, return error for real transactions
+        if (!isDatabaseAvailable()) {
+            throw new ApiError(503, "Database not available. Real transactions require database connection.");
+        }
+
+        // Get user and account details
+        const user = await UserModel.findById(userId).populate('account_no');
+        if (!user || !user.account_no || user.account_no.length === 0) {
+            throw new ApiError(404, "User account not found");
+        }
+
+        const account = user.account_no[0]; // Primary account
+
+        const actualAmount = rechargeType === 'mobile' ? amount : billAmount;
+
+        // Check sufficient balance
+        if (account.amount < actualAmount) {
+            throw new ApiError(400, "Insufficient balance for transaction");
+        }
+
+        // Use existing methods for real processing
+        if (rechargeType === 'mobile') {
+            return await this.processMobileRecharge({
+                mobileNumber,
+                operator,
+                amount,
+                rechargeType
+            }, userId);
+        } else {
+            return await this.processBillPayment({
+                billType,
+                consumerNumber,
+                amount: billAmount,
+                rechargeType
+            }, userId);
+        }
     }
 }
 

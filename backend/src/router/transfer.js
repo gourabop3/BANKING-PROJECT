@@ -10,6 +10,9 @@ router.post('/verify-account', AuthMiddleware, TransferController.verifyAccount)
 // Initiate money transfer
 router.post('/initiate', AuthMiddleware, TransferController.initiateTransfer);
 
+// External bank transfer
+router.post('/external', AuthMiddleware, TransferController.externalTransfer);
+
 // Get transfer history
 router.get('/history', AuthMiddleware, TransferController.getTransferHistory);
 

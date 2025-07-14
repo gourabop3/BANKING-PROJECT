@@ -36,6 +36,18 @@ class TransferController {
             });
         }
     }
+
+    static externalTransfer = async (req, res) => {
+        try {
+            const result = await TransferService.externalTransfer(req.body, req.user);
+            res.status(200).json(result);
+        } catch (error) {
+            res.status(400).json({ 
+                success: false, 
+                msg: error.message || "External transfer failed" 
+            });
+        }
+    }
 }
 
 module.exports = TransferController;

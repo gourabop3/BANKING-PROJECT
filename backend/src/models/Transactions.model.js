@@ -45,6 +45,11 @@ const Schema = new mongoose.Schema({
         type:Boolean,
         default:false
     },
+    // Demo mode flag
+    isDemo: {
+        type: Boolean,
+        default: false
+    },
     // Transfer related fields
     transferId: {
         type: mongoose.Schema.Types.ObjectId,

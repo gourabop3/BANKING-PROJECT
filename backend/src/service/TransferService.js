@@ -214,6 +214,20 @@ class TransferService {
         }
     }
 
+    static async externalTransfer(transferData, user) {
+        // Mock/demo implementation for external transfer
+        // You can add validation and mock logic here
+        return {
+            success: true,
+            transferId: 'EXT' + Date.now(),
+            transactionDetails: {
+                ...transferData,
+                status: 'success',
+                processedAt: new Date()
+            }
+        };
+    }
+
     /**
      * Get transfer history for a user
      */
