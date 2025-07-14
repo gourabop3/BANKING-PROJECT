@@ -78,9 +78,62 @@ export default function CustomerServicePage() {
     }
   };
 
+  // Modern KYC badge logic
+  const getKycStatusBadge = () => {
+    if (!user) return null;
+    let color = 'bg-gray-200 text-gray-700';
+    let text = 'Unknown';
+    if (user.kyc_status === 'completed') {
+      color = 'bg-green-100 text-green-800';
+      text = 'KYC Completed';
+    } else if (user.kyc_status === 'pending') {
+      color = 'bg-yellow-100 text-yellow-800';
+      text = 'KYC Pending';
+    } else if (user.kyc_status === 'rejected') {
+      color = 'bg-red-100 text-red-800';
+      text = 'KYC Rejected';
+    } else if (user.kyc_status === 'not_started') {
+      color = 'bg-gray-100 text-gray-700';
+      text = 'KYC Not Started';
+    }
+    return (
+      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ml-2 ${color}`}>
+        {text}
+      </span>
+    );
+  };
+
+  // Intercept KYC queries in sendMessage
   const sendMessage = async (messageText = null) => {
     const userMessage = messageText || input.trim();
     if (!userMessage) return;
+
+    // Intercept KYC queries
+    if (user && /\bkyc\b|kyc status|verify.*kyc|my kyc/i.test(userMessage)) {
+      let kycReply = '';
+      if (user.kyc_status === 'completed') {
+        kycReply = '✅ Your KYC is completed. You have full access to all banking features.';
+      } else if (user.kyc_status === 'pending') {
+        kycReply = '⏳ Your KYC is pending. Please wait for verification or contact support.';
+      } else if (user.kyc_status === 'rejected') {
+        kycReply = '❌ Your KYC was rejected. Please contact support or try again.';
+      } else {
+        kycReply = '⚠️ You have not started KYC. Please start your KYC to access all features.';
+      }
+      setMessages(prev => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          sender: "bot",
+          text: kycReply + (user.kyc_status !== 'completed' ? '\n\n👉 ' : '') + (user.kyc_status !== 'completed' ? '<button id="start-kyc-btn" class="bg-blue-600 text-white px-3 py-1 rounded ml-2">Start KYC</button>' : ''),
+          timestamp: new Date().toLocaleTimeString()
+        }
+      ]);
+      setInput("");
+      setLoading(false);
+      playNotificationSound();
+      return;
+    }
 
     const newMessage = {
       id: Date.now(),
