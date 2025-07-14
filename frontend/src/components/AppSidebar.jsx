@@ -13,8 +13,7 @@ import { AiOutlineRobot, AiOutlineInfoCircle } from 'react-icons/ai';
 import { useMainContext } from '@/context/MainContext';
 import { FaHtml5, FaCss3Alt, FaJs, FaReact, FaNodeJs, FaGithub, FaTelegram, FaInstagram, FaLinkedin, FaTwitter, FaEnvelope } from 'react-icons/fa';
 import { SiExpress, SiVite, SiMongodb, SiVercel, SiTailwindcss } from 'react-icons/si';
-import gsap from 'gsap';
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 
 const links = [
   { href: '/', label: 'Home', Icon: MdDashboard },
