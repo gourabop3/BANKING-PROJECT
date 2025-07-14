@@ -11,6 +11,10 @@ import { PiNewspaperClipping } from 'react-icons/pi';
 import { FaKey } from 'react-icons/fa';
 import { AiOutlineRobot, AiOutlineInfoCircle } from 'react-icons/ai';
 import { useMainContext } from '@/context/MainContext';
+import { FaHtml5, FaCss3Alt, FaJs, FaReact, FaNodeJs, FaGithub, FaTelegram, FaInstagram, FaLinkedin, FaTwitter, FaEnvelope } from 'react-icons/fa';
+import { SiExpress, SiVite, SiMongodb, SiVercel, SiTailwindcss } from 'react-icons/si';
+import gsap from 'gsap';
+import { useEffect, useRef, useState } from 'react';
 
 const links = [
   { href: '/', label: 'Home', Icon: MdDashboard },
@@ -25,6 +29,69 @@ const links = [
   { href: '/about', label: 'About', Icon: AiOutlineInfoCircle },
   { href: '/profile', label: 'Profile', Icon: GiFalloutShelter },
 ];
+
+const skills = [
+  { name: 'HTML', icon: FaHtml5, color: '#e34c26', desc: 'Markup language for the web.' },
+  { name: 'CSS', icon: FaCss3Alt, color: '#1572B6', desc: 'Styling for web pages.' },
+  { name: 'JavaScript', icon: FaJs, color: '#f7df1e', desc: 'Programming language of the web.' },
+  { name: 'React', icon: FaReact, color: '#61dafb', desc: 'UI library for building interfaces.' },
+  { name: 'Node.js', icon: FaNodeJs, color: '#3c873a', desc: 'JavaScript runtime for backend.' },
+  { name: 'Express.js', icon: SiExpress, color: '#000', desc: 'Web framework for Node.js.' },
+  { name: 'Vite', icon: SiVite, color: '#646cff', desc: 'Next generation frontend tooling.' },
+  { name: 'MongoDB', icon: SiMongodb, color: '#47A248', desc: 'NoSQL database.' },
+  { name: 'Vercel', icon: SiVercel, color: '#000', desc: 'Cloud platform for static sites.' },
+  { name: 'GitHub', icon: FaGithub, color: '#000', desc: 'Code hosting platform.' },
+  { name: 'Tailwind CSS', icon: SiTailwindcss, color: '#38bdf8', desc: 'Utility-first CSS framework.' },
+];
+
+function SkillsGrid() {
+  const [active, setActive] = useState(null);
+  const keyRefs = useRef([]);
+
+  useEffect(() => {
+    keyRefs.current.forEach((ref, i) => {
+      if (ref) {
+        gsap.set(ref, { scale: 1 });
+      }
+    });
+  }, []);
+
+  const handleKey = (i) => {
+    setActive(i);
+    if (keyRefs.current[i]) {
+      gsap.fromTo(keyRefs.current[i], { scale: 1 }, { scale: 1.2, yoyo: true, repeat: 1, duration: 0.2 });
+    }
+  };
+
+  return (
+    <div className="mt-4">
+      <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+        {skills.map((skill, i) => {
+          const Icon = skill.icon;
+          return (
+            <button
+              key={skill.name}
+              ref={el => keyRefs.current[i] = el}
+              className={`flex flex-col items-center p-2 rounded-lg shadow transition-all focus:outline-none ${active === i ? 'bg-gray-100' : 'bg-white'}`}
+              style={{ color: skill.color }}
+              onClick={() => handleKey(i)}
+              onMouseEnter={() => handleKey(i)}
+              tabIndex={0}
+            >
+              <Icon className="text-2xl sm:text-3xl" />
+              <span className="text-xs mt-1 font-medium">{skill.name}</span>
+            </button>
+          );
+        })}
+      </div>
+      {active !== null && (
+        <div className="mt-3 text-center text-sm text-gray-700 min-h-[32px]">
+          <b>{skills[active].name}:</b> {skills[active].desc}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function AppSidebar({ isOpen, onClose }) {
   const pathname = usePathname();
@@ -74,6 +141,23 @@ export default function AppSidebar({ isOpen, onClose }) {
               </Link>
             ))}
           </nav>
+          {/* Developer Info Section */}
+          <div className="mt-8 border-t pt-4">
+            <div className="font-bold text-lg mb-1">Meet the Developer</div>
+            <div className="text-sm text-gray-700">Gourab Paul</div>
+            <div className="text-xs text-gray-500">gourabopx@gmail.com</div>
+            <div className="text-xs text-gray-500 mb-2">+91-9876543210</div>
+            <div className="flex gap-2 mb-2">
+              <a href="https://github.com/gourabopx" target="_blank" rel="noopener noreferrer"><FaGithub className="text-xl hover:text-black" /></a>
+              <a href="mailto:gourabopx@gmail.com" target="_blank" rel="noopener noreferrer"><FaEnvelope className="text-xl hover:text-red-500" /></a>
+              <a href="https://t.me/gourabopx" target="_blank" rel="noopener noreferrer"><FaTelegram className="text-xl hover:text-blue-400" /></a>
+              <a href="https://instagram.com/gourabopx" target="_blank" rel="noopener noreferrer"><FaInstagram className="text-xl hover:text-pink-500" /></a>
+              <a href="https://linkedin.com/in/gourabopx" target="_blank" rel="noopener noreferrer"><FaLinkedin className="text-xl hover:text-blue-700" /></a>
+              <a href="https://twitter.com/gourabopx" target="_blank" rel="noopener noreferrer"><FaTwitter className="text-xl hover:text-blue-400" /></a>
+            </div>
+            <div className="font-semibold text-sm mt-2">Skills</div>
+            <SkillsGrid />
+          </div>
         </div>
       </aside>
     </>
