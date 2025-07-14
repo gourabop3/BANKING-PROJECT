@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { FaBank, FaCheckCircle, FaExclamationTriangle, FaTimes, FaSpinner } from 'react-icons/fa';
+import { FaUniversity, FaCheckCircle, FaExclamationTriangle, FaTimes, FaSpinner } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { axiosClient } from '@/utils/AxiosClient';
 
@@ -113,7 +113,7 @@ const BankAccountLinking = () => {
     <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 mb-8">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-xl font-bold text-gray-800 flex items-center gap-3">
-          <FaBank className="text-blue-600" />
+          <FaUniversity className="text-blue-600" />
           Bank Account Management
         </h3>
         <button
@@ -126,7 +126,7 @@ const BankAccountLinking = () => {
 
       {accounts.length === 0 ? (
         <div className="text-center py-8 bg-gray-50 rounded-xl">
-          <FaBank className="text-gray-400 text-4xl mx-auto mb-4" />
+          <FaUniversity className="text-gray-400 text-4xl mx-auto mb-4" />
           <p className="text-gray-600 mb-4">No bank accounts linked yet</p>
           <p className="text-sm text-gray-500">
             Link your bank account to start accepting payments through the gateway

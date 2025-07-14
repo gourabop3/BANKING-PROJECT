@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from 'react';
-import { FaBank, FaPlus, FaArrowRight } from 'react-icons/fa';
+import { FaUniversity, FaPlus, FaArrowRight } from 'react-icons/fa';
 import BankAccountLinking from './BankAccountLinking';
 
 const SimpleBankAccountSection = () => {
@@ -39,7 +39,7 @@ const SimpleBankAccountSection = () => {
     <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 mb-8">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-xl font-bold text-gray-800 flex items-center gap-3">
-          <FaBank className="text-blue-600" />
+          <FaUniversity className="text-blue-600" />
           Bank Account Setup
         </h3>
       </div>

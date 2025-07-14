@@ -494,7 +494,7 @@ const TransferPage = () => {
                             required
                           />
                           <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                            <FaBank className="text-gray-400" />
+                            <FaUniversity className="text-gray-400" />
                           </div>
                         </div>
                       </div>
