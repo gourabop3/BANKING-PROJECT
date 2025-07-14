@@ -77,30 +77,6 @@ export default function AppSidebar({ isOpen, onClose }) {
             ))}
           </nav>
         </div>
-        {/* Profile section pinned to bottom */}
-        <div className="p-4 border-t mt-auto bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
-          {user ? (
-            <div className="flex flex-col items-center">
-              <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center text-2xl font-bold mb-2">
-                {user.fullName ? user.fullName[0] : user.email[0]}
-              </div>
-              <div className="font-bold text-lg">{user.fullName || 'User'}</div>
-              <div className="text-xs opacity-80 mb-1">{user.email}</div>
-              <div className="flex gap-2 mt-1">
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800">
-                  ✓ Verified
-                </span>
-                {user.kyc_status === 'completed' || user.kyc_status === 'approved' ? (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
-                    ✓ KYC Verified
-                  </span>
-                ) : null}
-              </div>
-            </div>
-          ) : (
-            <div className="text-center text-xs opacity-80">Not logged in</div>
-          )}
-        </div>
       </aside>
     </>
   );
