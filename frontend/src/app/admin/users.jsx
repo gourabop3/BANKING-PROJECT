@@ -51,9 +51,9 @@ export default function AdminUsersPage() {
   };
 
   return (
-    <div className="flex">
+    <div className="flex min-h-screen bg-gradient-to-br from-blue-50 to-purple-100">
       <AdminSidebar />
-      <main className="flex-1 p-8">
+      <main className="flex-1 p-4 md:p-8 overflow-y-auto">
         <h1 className="text-2xl font-bold mb-4">User Management</h1>
         <div className="flex gap-2 mb-4">
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name/email" className="border p-2 rounded" />

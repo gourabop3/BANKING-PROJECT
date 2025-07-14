@@ -25,7 +25,7 @@ export default function AdminLoansPage() {
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-blue-50 to-purple-100">
       <AdminSidebar />
-      <main className="flex-1 p-8 overflow-y-auto">
+      <main className="flex-1 p-4 md:p-8 overflow-y-auto">
         <h1 className="text-3xl font-bold mb-6 text-blue-900">Loan Applications</h1>
         <div className="bg-white rounded-xl shadow p-6">
           <table className="w-full text-left">
