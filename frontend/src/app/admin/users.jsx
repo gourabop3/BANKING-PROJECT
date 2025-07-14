@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import AdminSidebar from './+__(components)/AdminSidebar';
+import AdminSidebar from '../+__(components)/AdminSidebar';
 import UserTable from './+__(components)/UserTable';
 import UserDetailsModal from './+__(components)/UserDetailsModal';
 import BulkActionsBar from './+__(components)/BulkActionsBar';

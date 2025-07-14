@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import AdminSidebar from './+__(components)/AdminSidebar';
+import AdminSidebar from '../+__(components)/AdminSidebar';
 import { axiosClient } from '@/utils/AxiosClient';
 import { FaCheck, FaTimes, FaMoneyBillWave } from 'react-icons/fa';
 
