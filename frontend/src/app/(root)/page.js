@@ -20,7 +20,7 @@ const HomePage=()=>{
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('user_token');
+    const token = localStorage.getItem('token');
     if (!token) {
       router.replace('/login');
     } else {
