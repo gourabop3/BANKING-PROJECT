@@ -13,6 +13,7 @@ const MainLayout = ({children}) => {
   const pathname = usePathname();
   // Hide navbar on login and admin-login pages
   const hideNavbar = pathname === '/login' || pathname === '/admin-login';
+  const hideSidebar = hideNavbar || pathname.startsWith('/admin');
   return (
     <Provider store={store}>
     <MainContextProvider>
@@ -21,7 +22,7 @@ const MainLayout = ({children}) => {
       {!hideNavbar && <Navbar/>}
       <div className="flex">
         {/* Sidebar */}
-        {!hideNavbar && <AppSidebar />}
+        {!hideSidebar && <AppSidebar />}
         {/* Main content */}
         <div className="flex-1">{children}</div>
       </div>
