@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { MdDashboard, MdPeople, MdVerifiedUser, MdAttachMoney, MdLocalOffer, MdLogout } from 'react-icons/md';
+import { MdDashboard, MdPeople, MdVerifiedUser, MdAttachMoney, MdLocalOffer, MdLogout, MdListAlt, MdDiscount } from 'react-icons/md';
+import { FaListUl } from 'react-icons/fa';
 
 const links = [
   { href: '/admin/dashboard', label: 'Dashboard', Icon: MdDashboard },
@@ -8,6 +9,7 @@ const links = [
   { href: '/admin/kyc', label: 'KYC', Icon: MdVerifiedUser },
   { href: '/admin/loans', label: 'Loans', Icon: MdAttachMoney },
   { href: '/admin/discounts', label: 'Discounts', Icon: MdLocalOffer },
+  { href: '/admin/recharge-plans', label: 'Recharge Plans', Icon: FaListUl },
 ];
 
 export default function AdminSidebar() {
