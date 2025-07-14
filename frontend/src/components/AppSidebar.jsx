@@ -51,13 +51,18 @@ function SkillsGrid() {
       <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
         {skills.map((skill, i) => {
           const Icon = skill.icon;
+          const isActive = active === i;
           return (
             <button
               key={skill.name}
-              className={`flex flex-col items-center p-2 rounded-lg shadow transition-all focus:outline-none ${active === i ? 'bg-gray-100' : 'bg-white'}`}
-              style={{ color: skill.color }}
+              className={`flex flex-col items-center p-2 rounded-lg shadow transition-all focus:outline-none
+                ${isActive ? 'bg-blue-50 border-2 border-blue-400 scale-105' : 'bg-white'}
+                hover:scale-110 hover:shadow-lg active:scale-95
+              `}
+              style={{ color: skill.color, transition: 'all 0.18s cubic-bezier(.4,2,.6,1)' }}
               onClick={() => setActive(i)}
               tabIndex={0}
+              aria-pressed={isActive}
             >
               <Icon className="text-2xl sm:text-3xl" />
               <span className="text-xs mt-1 font-medium">{skill.name}</span>
@@ -66,7 +71,7 @@ function SkillsGrid() {
         })}
       </div>
       {active !== null && (
-        <div className="mt-3 text-center text-sm text-gray-700 min-h-[32px] animate-fade-in">
+        <div className="mt-3 text-center text-sm text-gray-700 min-h-[32px] animate-fade-in transition-opacity duration-300 opacity-100">
           <b>{skills[active].name}:</b> {skills[active].desc}
         </div>
       )}
