@@ -162,7 +162,7 @@ const AllATMCards = () => {
               <div className="relative h-full flex flex-col justify-between z-10">
                 <div className="text-center">
                   <h3 className="text-lg font-bold tracking-wide text-white drop-shadow-lg">
-                    {getCardTitle(atm.card_type)}
+                    {atm.card_type ? getCardTitle(atm.card_type) : 'Virtual Card'}
                   </h3>
                 </div>
 
@@ -170,7 +170,7 @@ const AllATMCards = () => {
                   <div className="text-2xl font-mono font-bold tracking-widest text-white drop-shadow-lg">
                     {atm.card_no && atm.card_no.toString().length >= 16
                       ? `${atm.card_no.slice(0, 4)} **** **** ${atm.card_no.slice(12, 16)}`
-                      : atm.card_no || "Card Number Not Available"}
+                      : '**** **** **** ****'}
                   </div>
                 </div>
 

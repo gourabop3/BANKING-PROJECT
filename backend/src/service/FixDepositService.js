@@ -19,7 +19,7 @@ class FixDepositService{
         }
         //for all fd amount na to jayda ho na hi barabar ho
         if(parseInt(body.amount) >= existAccount.amount ){
-            throw new ApiError(400,"Insufficient Balanace Please Add Money ")
+            throw new ApiError(400,"Insufficient Balance. Please Deposit.")
 
         }
         //for current account amount limit se kam or uske barabar nhi hona chaiye 

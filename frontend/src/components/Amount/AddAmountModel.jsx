@@ -133,7 +133,7 @@ export default function AddAmountModel({id}) {
       amount: (values.amount*100).toString(),
       currency: 'INR',
       name: "CBI Bank",
-      description: "Add Money Transaction",
+      description: "Deposit Transaction",
       callback_url: razorpayCallBackUrl(data.txn_id),
       "image": "/logo.svg",
       // image: { logo },
@@ -237,7 +237,7 @@ export default function AddAmountModel({id}) {
           className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors duration-200 font-medium'
         > 
           <CiSquarePlus className="text-lg"/> 
-          <span>Add Money</span>
+          <span>Deposit</span>
         </button>
         
  
@@ -272,7 +272,7 @@ export default function AddAmountModel({id}) {
                     as="h3"
                     className="text-lg font-medium leading-6 text-gray-900 flex items-center justify-between"
                   >
-                  <span>  Add Payment</span>
+                  <span>  Deposit</span>
 
                   <button onClick={closeModal} className='text-2xl text-black p-2 bg-rose-100 rounded-full cursor-pointer'>
                     <IoClose/>
