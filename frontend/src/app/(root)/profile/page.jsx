@@ -400,28 +400,32 @@ const ProfilePage = () => {
             </Tab.Panel>
             {/* Account Details Tab */}
             <Tab.Panel>
-              <div className="space-y-6">
-                <div className="flex items-center gap-3">
-                  <MdAccountBalance className="text-blue-600 text-xl" />
-                  <span className="font-semibold text-gray-800">Account Numbers</span>
-                </div>
-                <div className="bg-blue-50 rounded-xl p-4">
-                  <p className="text-sm text-gray-600 mb-2">Your linked account numbers:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {(Array.isArray(user?.account_no) ? user.account_no : []).map((acc, idx) => (
-                      <span key={idx} className="bg-white border border-blue-200 px-4 py-2 rounded-xl font-mono text-blue-700 text-sm">{acc}</span>
-                    ))}
+              {user ? (
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3">
+                    <MdAccountBalance className="text-blue-600 text-xl" />
+                    <span className="font-semibold text-gray-800">Account Numbers</span>
+                  </div>
+                  <div className="bg-blue-50 rounded-xl p-4">
+                    <p className="text-sm text-gray-600 mb-2">Your linked account numbers:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {(Array.isArray(user?.account_no) ? user.account_no : []).map((acc, idx) => (
+                        <span key={idx} className="bg-white border border-blue-200 px-4 py-2 rounded-xl font-mono text-blue-700 text-sm">{acc}</span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <FaCoins className="text-green-600 text-xl" />
+                    <span className="font-semibold text-gray-800">UPI ID</span>
+                  </div>
+                  <div className="bg-green-50 rounded-xl p-4 flex items-center gap-2">
+                    <span className="font-mono text-green-700">{user?.upi_id || 'Not Set'}</span>
+                    <button className="bg-green-600 text-white px-3 py-1 rounded-xl font-semibold hover:bg-green-700 transition-all text-xs">Copy</button>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <FaCoins className="text-green-600 text-xl" />
-                  <span className="font-semibold text-gray-800">UPI ID</span>
-                </div>
-                <div className="bg-green-50 rounded-xl p-4 flex items-center gap-2">
-                  <span className="font-mono text-green-700">{user?.upi_id || 'Not Set'}</span>
-                  <button className="bg-green-600 text-white px-3 py-1 rounded-xl font-semibold hover:bg-green-700 transition-all text-xs">Copy</button>
-                </div>
-              </div>
+              ) : (
+                <div className="text-center text-gray-500 py-8">Loading account details...</div>
+              )}
             </Tab.Panel>
             {/* Preferences Tab */}
             <Tab.Panel>
