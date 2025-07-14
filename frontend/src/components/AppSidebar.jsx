@@ -126,23 +126,6 @@ export default function AppSidebar({ isOpen, onClose }) {
               </Link>
             ))}
           </nav>
-          {/* Developer Info Section */}
-          <div className="mt-8 border-t pt-4">
-            <div className="font-bold text-lg mb-1">Meet the Developer</div>
-            <div className="text-sm text-gray-700">Gourab Paul</div>
-            <div className="text-xs text-gray-500">gourabopx@gmail.com</div>
-            <div className="text-xs text-gray-500 mb-2">+91-9876543210</div>
-            <div className="flex gap-2 mb-2">
-              <a href="https://github.com/gourabopx" target="_blank" rel="noopener noreferrer"><FaGithub className="text-xl hover:text-black" /></a>
-              <a href="mailto:gourabopx@gmail.com" target="_blank" rel="noopener noreferrer"><FaEnvelope className="text-xl hover:text-red-500" /></a>
-              <a href="https://t.me/gourabopx" target="_blank" rel="noopener noreferrer"><FaTelegram className="text-xl hover:text-blue-400" /></a>
-              <a href="https://instagram.com/gourabopx" target="_blank" rel="noopener noreferrer"><FaInstagram className="text-xl hover:text-pink-500" /></a>
-              <a href="https://linkedin.com/in/gourabopx" target="_blank" rel="noopener noreferrer"><FaLinkedin className="text-xl hover:text-blue-700" /></a>
-              <a href="https://twitter.com/gourabopx" target="_blank" rel="noopener noreferrer"><FaTwitter className="text-xl hover:text-blue-400" /></a>
-            </div>
-            <div className="font-semibold text-sm mt-2">Skills</div>
-            <SkillsGrid />
-          </div>
         </div>
       </aside>
     </>
