@@ -42,7 +42,7 @@ export default function CustomerServicePage() {
   const bottomRef = useRef(null);
   const chatInputRef = useRef(null);
   // Always open chat on this page
-  const [isOpen, setIsOpen] = useState(true);
+  // const [isOpen, setIsOpen] = useState(true);
 
   // Quick reply suggestions based on user authentication
   const quickReplies = user ? [
@@ -229,60 +229,154 @@ export default function CustomerServicePage() {
     }
   };
 
-  // Replace main render with always-open, centered chat widget
+  // Restore classic full-page chat layout
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="w-full max-w-md bg-white/80 backdrop-blur-lg rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-blue-100 animate-fadeIn">
-        {/* Header */}
-        <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-500 text-white">
-          <div className="bg-white/30 rounded-full p-2">
-            <FaRobot className="text-2xl text-blue-900" />
-          </div>
-          <div className="flex-1">
-            <div className="font-bold text-base">CBI Assistant</div>
-            <div className="text-xs text-blue-100">Online</div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+      <div className="container py-6 md:py-10 px-4 md:px-6">
+        <HeaderName />
+        {/* Quick Actions */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            {quickActions.map((action, index) => {
+              const Icon = action.icon;
+              return (
+                <button
+                  key={index}
+                  onClick={() => sendMessage(action.text)}
+                  className="flex flex-col items-center gap-2 p-3 bg-gray-50 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-all duration-300 transform hover:scale-105"
+                >
+                  <Icon className="text-xl" />
+                  <span className="text-xs font-medium text-center">{action.text}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
-        {/* Chat Body */}
-        <div className="flex-1 flex flex-col gap-2 px-3 py-2 overflow-y-auto bg-white/60" style={{ maxHeight: 500 }}>
-          {messages.map((msg, idx) => (
-            <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`rounded-2xl px-4 py-2 mb-1 max-w-[80%] text-sm shadow ${msg.sender === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-800'}`}>
-                {msg.sender === 'bot' ? modernizeReply(msg.text) : msg.text}
+        {/* Chat Container */}
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+          {/* Chat Header */}
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="relative bg-white bg-opacity-20 p-2 rounded-lg">
+                  <FaRobot className="text-white text-xl" />
+                  <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></div>
+                </div>
+                <div>
+                  <h3 className="text-white font-semibold text-lg">CBI Assistant - Live Chat Support</h3>
+                  <p className="text-blue-100 text-sm">
+                    {user 
+                      ? `Hello ${user.fullName?.split(' ')[0] || 'User'} • Created by Gourab • Online`
+                      : 'Created by Gourab • Online'
+                    }
+                  </p>
+                  <p className="text-blue-200 text-xs">
+                    📧 gourabmop@gmail.com • 📱 +91 9263839602 • 📍 West Bengal, India
+                  </p>
+                </div>
               </div>
             </div>
-          ))}
-          {loading && (
-            <div className="flex justify-start">
-              <div className="rounded-2xl px-4 py-2 mb-1 bg-gray-100 text-gray-500 text-sm animate-pulse">CBI Assistant is typing...</div>
+          </div>
+          {/* Messages */}
+          <div className="h-96 overflow-y-auto bg-gray-50 p-6 space-y-4">
+            {messages.map((m) => (
+              <div
+                key={m.id}
+                className={`flex items-start gap-3 ${
+                  m.sender === "user" ? "flex-row-reverse" : "flex-row"
+                }`}
+              >
+                {/* Avatar */}
+                <div
+                  className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                    m.sender === "user"
+                      ? "bg-blue-600 text-white"
+                      : "bg-gradient-to-r from-green-500 to-emerald-500 text-white"
+                  }`}
+                >
+                  {m.sender === "user" ? (
+                    <FaUser className="text-xs" />
+                  ) : (
+                    <FaRobot className="text-xs" />
+                  )}
+                </div>
+                {/* Bubble */}
+                <div
+                  className={`max-w-md ${
+                    m.sender === "user" ? "text-right" : "text-left"
+                  }`}
+                >
+                  <div
+                    className={`inline-block px-4 py-3 rounded-2xl shadow-sm ${
+                      m.sender === "user"
+                        ? "bg-blue-600 text-white rounded-br-none"
+                        : "bg-white text-gray-800 rounded-bl-none border border-gray-200"
+                    }`}
+                  >
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                      {m.text}
+                    </p>
+                  </div>
+                  <p
+                    className={`text-xs mt-1 ${
+                      m.sender === "user" ? "text-gray-500 text-right" : "text-gray-500 text-left"
+                    }`}
+                  >
+                    {m.timestamp}
+                  </p>
+                </div>
+              </div>
+            ))}
+            {/* Typing indicator */}
+            {loading && (
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 text-white flex items-center justify-center">
+                  <FaRobot className="text-xs" />
+                </div>
+                <div className="bg-white rounded-2xl rounded-bl-none border border-gray-200 px-4 py-3 shadow-sm">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div ref={bottomRef} />
+          </div>
+          {/* Input */}
+          <div className="bg-white border-t border-gray-200 p-4">
+            <div className="flex items-end gap-3">
+              <textarea
+                ref={chatInputRef}
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={onKeyDown}
+                rows={1}
+                placeholder="Type your banking question here..."
+                className="flex-1 w-full px-4 py-3 border border-gray-300 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                style={{ maxHeight: "100px" }}
+                disabled={loading}
+              />
+              <button
+                onClick={() => sendMessage()}
+                disabled={loading || !input.trim()}
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white p-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none"
+              >
+                <FaPaperPlane className="text-lg" />
+              </button>
             </div>
-          )}
-          <div ref={bottomRef} />
+            {/* Action Info */}
+            <div className="flex justify-between items-center mt-2 text-xs text-gray-500">
+              <span>Press Enter to send • {user ? 'Authenticated chat' : 'Public chat'}</span>
+              <span className="flex items-center gap-1">
+                <span className="inline-block w-2 h-2 bg-green-400 rounded-full"></span>
+                AI Assistant Online
+              </span>
+            </div>
+          </div>
         </div>
-        {/* Input Bar */}
-        <form
-          className="flex items-center gap-2 px-3 py-2 bg-white/80 border-t"
-          onSubmit={e => { e.preventDefault(); sendMessage(); }}
-        >
-          <input
-            ref={chatInputRef}
-            type="text"
-            className="flex-1 rounded-xl px-3 py-2 border border-gray-200 focus:ring-2 focus:ring-blue-400 outline-none text-sm bg-white"
-            placeholder="Type your message..."
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            disabled={loading}
-            autoFocus={isOpen}
-          />
-          <button
-            type="submit"
-            className="bg-blue-600 hover:bg-blue-700 text-white rounded-full p-2 text-xl flex items-center justify-center disabled:opacity-50"
-            disabled={loading || !input.trim()}
-            aria-label="Send"
-          >
-            <FaPaperPlane />
-          </button>
-        </form>
       </div>
     </div>
   );
