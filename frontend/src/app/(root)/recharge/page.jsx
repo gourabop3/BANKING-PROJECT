@@ -15,13 +15,37 @@ import {
   MdCreditCard,
   MdWifi,
   MdTv,
-  MdCheckCircle
+  MdCheckCircle,
+  MdSecurity,
+  MdSpeed,
+  MdVerified,
+  MdAccountBalance,
+  MdPayment,
+  MdReceipt
 } from 'react-icons/md';
-import { FaCheckCircle, FaSpinner } from 'react-icons/fa';
-import { BiMoney } from 'react-icons/bi';
+import { 
+  FaCheckCircle, 
+  FaSpinner, 
+  FaShieldAlt, 
+  FaBolt,
+  FaWifi,
+  FaCreditCard,
+  FaTv,
+  FaWater,
+  FaFire,
+  FaMobile,
+  FaMoneyBillWave,
+  FaGift,
+  FaStar,
+  FaCrown,
+  FaGem
+} from 'react-icons/fa';
+import { BiMoney, BiTransfer } from 'react-icons/bi';
+import { IoShieldCheckmark } from 'react-icons/io5';
 
 const RechargePage = () => {
   const [activeTab, setActiveTab] = useState('mobile');
+  const [rechargeMode, setRechargeMode] = useState('demo'); // 'demo' or 'real'
   const [rechargeData, setRechargeData] = useState({
     mobileNumber: '',
     operator: '',
@@ -34,6 +58,8 @@ const RechargePage = () => {
   const [plans, setPlans] = useState([]);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [operatorDetails, setOperatorDetails] = useState(null);
+  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [balanceAnimation, setBalanceAnimation] = useState(false);
   const { user, fetchUserProfile } = useMainContext();
   const router = useRouter();
 
@@ -42,9 +68,8 @@ const RechargePage = () => {
   const userAccountNumber = (primaryAccount && user?._id) ? generateAccountNumber(user._id, primaryAccount._id, primaryAccount.ac_type) : '';
   const userBalance = primaryAccount?.amount || 0;
 
-  // Real-time balance updates
+  // Real-time balance updates with animation
   useEffect(() => {
-    // Refresh user data every 15 seconds for real-time balance updates
     const interval = setInterval(() => {
       fetchUserProfile();
     }, 15000);
@@ -52,54 +77,70 @@ const RechargePage = () => {
     return () => clearInterval(interval);
   }, [fetchUserProfile]);
 
-  // Mobile operators with their details
+  // Enhanced mobile operators with real details
   const mobileOperators = [
-    { id: 'jio', name: 'Jio', logo: '🔵', color: '#0066cc' },
-    { id: 'airtel', name: 'Airtel', logo: '🔴', color: '#dc2626' },
-    { id: 'vi', name: 'Vi (Vodafone Idea)', logo: '🟣', color: '#7c3aed' },
-    //add more 
+    { 
+      id: 'jio', 
+      name: 'Jio', 
+      logo: '🔵', 
+      color: '#0066cc',
+      plans: [
+        { amount: 149, validity: '24 days', data: '1GB/day', description: 'Unlimited calls + SMS', cashback: '₹10' },
+        { amount: 299, validity: '28 days', data: '2GB/day', description: 'Unlimited calls + SMS', cashback: '₹25' },
+        { amount: 399, validity: '56 days', data: '1.5GB/day', description: 'Unlimited calls + SMS', cashback: '₹40' },
+        { amount: 666, validity: '84 days', data: '1.5GB/day', description: 'Unlimited calls + SMS', cashback: '₹75' },
+        { amount: 999, validity: '84 days', data: '3GB/day', description: 'Unlimited calls + SMS', cashback: '₹120' }
+      ]
+    },
+    { 
+      id: 'airtel', 
+      name: 'Airtel', 
+      logo: '🔴', 
+      color: '#dc2626',
+      plans: [
+        { amount: 155, validity: '24 days', data: '1GB/day', description: 'Unlimited calls + 100 SMS', cashback: '₹12' },
+        { amount: 319, validity: '30 days', data: '2GB/day', description: 'Unlimited calls + 100 SMS', cashback: '₹30' },
+        { amount: 479, validity: '56 days', data: '1.5GB/day', description: 'Unlimited calls + 100 SMS', cashback: '₹50' },
+        { amount: 719, validity: '84 days', data: '1.5GB/day', description: 'Unlimited calls + 100 SMS', cashback: '₹80' },
+        { amount: 1199, validity: '84 days', data: '3GB/day', description: 'Unlimited calls + 100 SMS', cashback: '₹150' }
+      ]
+    },
+    { 
+      id: 'vi', 
+      name: 'Vi (Vodafone Idea)', 
+      logo: '🟣', 
+      color: '#7c3aed',
+      plans: [
+        { amount: 157, validity: '28 days', data: '1GB/day', description: 'Unlimited calls + 100 SMS', cashback: '₹15' },
+        { amount: 327, validity: '28 days', data: '2GB/day', description: 'Unlimited calls + 100 SMS', cashback: '₹35' },
+        { amount: 497, validity: '56 days', data: '1.5GB/day', description: 'Unlimited calls + 100 SMS', cashback: '₹60' },
+        { amount: 747, validity: '84 days', data: '1.5GB/day', description: 'Unlimited calls + 100 SMS', cashback: '₹90' },
+        { amount: 1247, validity: '84 days', data: '3GB/day', description: 'Unlimited calls + 100 SMS', cashback: '₹180' }
+      ]
+    },
+    { 
+      id: 'bsnl', 
+      name: 'BSNL', 
+      logo: '🟡', 
+      color: '#f59e0b',
+      plans: [
+        { amount: 107, validity: '35 days', data: '2GB/day', description: 'Unlimited calls + 100 SMS', cashback: '₹8' },
+        { amount: 187, validity: '28 days', data: '2GB/day', description: 'Unlimited calls + 100 SMS', cashback: '₹20' },
+        { amount: 397, validity: '80 days', data: '2GB/day', description: 'Unlimited calls + 100 SMS', cashback: '₹45' },
+        { amount: 797, validity: '160 days', data: '2GB/day', description: 'Unlimited calls + 100 SMS', cashback: '₹100' }
+      ]
+    }
   ];
 
-  // Bill payment types
+  // Enhanced bill payment types
   const billTypes = [
-    { id: 'electricity', name: 'Electricity Bill', icon: MdElectricBolt, color: '#eab308' },
-    { id: 'water', name: 'Water Bill', icon: MdWater, color: '#0ea5e9' },
-    { id: 'gas', name: 'Gas Bill', icon: MdLocalGasStation, color: '#f97316' },
-    { id: 'credit_card', name: 'Credit Card', icon: MdCreditCard, color: '#dc2626' },
-    { id: 'broadband', name: 'Broadband/Internet', icon: MdWifi, color: '#059669' },
-    { id: 'dth', name: 'DTH/Cable TV', icon: MdTv, color: '#7c3aed' }
+    { id: 'electricity', name: 'Electricity Bill', icon: MdElectricBolt, color: '#eab308', description: 'Pay electricity bills instantly' },
+    { id: 'water', name: 'Water Bill', icon: MdWater, color: '#0ea5e9', description: 'Settle water utility bills' },
+    { id: 'gas', name: 'Gas Bill', icon: MdLocalGasStation, color: '#f97316', description: 'Pay gas connection bills' },
+    { id: 'credit_card', name: 'Credit Card', icon: MdCreditCard, color: '#dc2626', description: 'Credit card bill payments' },
+    { id: 'broadband', name: 'Broadband/Internet', icon: MdWifi, color: '#059669', description: 'Internet service bills' },
+    { id: 'dth', name: 'DTH/Cable TV', icon: MdTv, color: '#7c3aed', description: 'Cable TV and DTH bills' }
   ];
-
-  // Popular recharge plans
-  const popularPlans = {
-    jio: [
-      { amount: 149, validity: '24 days', data: '1GB/day', description: 'Unlimited calls + SMS' },
-      { amount: 299, validity: '28 days', data: '2GB/day', description: 'Unlimited calls + SMS' },
-      { amount: 399, validity: '56 days', data: '1.5GB/day', description: 'Unlimited calls + SMS' },
-      { amount: 666, validity: '84 days', data: '1.5GB/day', description: 'Unlimited calls + SMS' },
-      { amount: 999, validity: '84 days', data: '3GB/day', description: 'Unlimited calls + SMS' }
-    ],
-    airtel: [
-      { amount: 155, validity: '24 days', data: '1GB/day', description: 'Unlimited calls + 100 SMS' },
-      { amount: 319, validity: '30 days', data: '2GB/day', description: 'Unlimited calls + 100 SMS' },
-      { amount: 479, validity: '56 days', data: '1.5GB/day', description: 'Unlimited calls + 100 SMS' },
-      { amount: 719, validity: '84 days', data: '1.5GB/day', description: 'Unlimited calls + 100 SMS' },
-      { amount: 1199, validity: '84 days', data: '3GB/day', description: 'Unlimited calls + 100 SMS' }
-    ],
-    vi: [
-      { amount: 157, validity: '28 days', data: '1GB/day', description: 'Unlimited calls + 100 SMS' },
-      { amount: 327, validity: '28 days', data: '2GB/day', description: 'Unlimited calls + 100 SMS' },
-      { amount: 497, validity: '56 days', data: '1.5GB/day', description: 'Unlimited calls + 100 SMS' },
-      { amount: 747, validity: '84 days', data: '1.5GB/day', description: 'Unlimited calls + 100 SMS' },
-      { amount: 1247, validity: '84 days', data: '3GB/day', description: 'Unlimited calls + 100 SMS' }
-    ],
-    bsnl: [
-      { amount: 107, validity: '35 days', data: '2GB/day', description: 'Unlimited calls + 100 SMS' },
-      { amount: 187, validity: '28 days', data: '2GB/day', description: 'Unlimited calls + 100 SMS' },
-      { amount: 397, validity: '80 days', data: '2GB/day', description: 'Unlimited calls + 100 SMS' },
-      { amount: 797, validity: '160 days', data: '2GB/day', description: 'Unlimited calls + 100 SMS' }
-    ]
-  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -109,12 +150,17 @@ const RechargePage = () => {
     }));
 
     // Load plans when operator is selected
-    if (name === 'operator' && value && popularPlans[value]) {
-      setPlans(popularPlans[value]);
+    if (name === 'operator' && value) {
+      const operator = mobileOperators.find(op => op.id === value);
+      if (operator) {
+        setPlans(operator.plans);
+        setOperatorDetails(operator);
+      }
     }
   };
 
   const handlePlanSelect = (plan) => {
+    setSelectedPlan(plan);
     setRechargeData(prev => ({
       ...prev,
       amount: plan.amount.toString()
@@ -130,7 +176,6 @@ const RechargePage = () => {
     e.preventDefault();
     
     if (activeTab === 'mobile') {
-      // Mobile recharge validation
       if (!validateMobileNumber(rechargeData.mobileNumber)) {
         toast.error('Please enter a valid 10-digit mobile number');
         return;
@@ -141,7 +186,6 @@ const RechargePage = () => {
         return;
       }
     } else {
-      // Bill payment validation
       if (!rechargeData.billType) {
         toast.error('Please select bill type');
         return;
@@ -175,17 +219,20 @@ const RechargePage = () => {
   const confirmRecharge = async () => {
     setLoading(true);
     try {
-      const endpoint = activeTab === 'mobile' ? '/recharge/mobile' : '/recharge/bill-payment';
+      const endpoint = rechargeMode === 'real' ? '/recharge/real' : '/recharge/demo';
       const payload = activeTab === 'mobile' ? {
         mobileNumber: rechargeData.mobileNumber,
         operator: rechargeData.operator,
         amount: parseFloat(rechargeData.amount),
-        rechargeType: 'mobile'
+        rechargeType: 'mobile',
+        mode: rechargeMode,
+        planDetails: selectedPlan
       } : {
         billType: rechargeData.billType,
         consumerNumber: rechargeData.consumerNumber,
         amount: parseFloat(rechargeData.billAmount),
-        rechargeType: 'bill'
+        rechargeType: 'bill',
+        mode: rechargeMode
       };
 
       const response = await axiosClient.post(endpoint, payload, {
@@ -195,21 +242,27 @@ const RechargePage = () => {
       });
 
       if (response.data.success) {
-        // Immediately refresh balance after successful recharge/bill payment
         await fetchUserProfile();
         
-        // Show success message briefly before redirecting
+        // Animate balance update
+        setBalanceAnimation(true);
+        setTimeout(() => setBalanceAnimation(false), 2000);
+        
         toast.success(`${activeTab === 'mobile' ? 'Recharge' : 'Bill payment'} successful! Balance updated.`);
         
         setTimeout(() => {
-          if (activeTab === 'mobile') {
-            const { transactionId, details } = response.data;
-            router.push(`/recharge-success?txnId=${transactionId}&mobile=${details?.mobileNumber || rechargeData.mobileNumber}&amount=${details?.amount || rechargeData.amount}&operator=${rechargeData.operator}&ts=${Date.now()}`);
-          } else {
-            // For bill payment, redirect with appropriate params
-            const { transactionId } = response.data;
-            router.push(`/recharge-success?txnId=${transactionId}&amount=${rechargeData.billAmount}&operator=${rechargeData.billType}&ts=${Date.now()}`);
-          }
+          const { transactionId, details } = response.data;
+          const params = new URLSearchParams({
+            txnId: transactionId,
+            amount: activeTab === 'mobile' ? rechargeData.amount : rechargeData.billAmount,
+            operator: activeTab === 'mobile' ? rechargeData.operator : rechargeData.billType,
+            mobile: activeTab === 'mobile' ? rechargeData.mobileNumber : '',
+            mode: rechargeMode,
+            type: activeTab,
+            ts: Date.now()
+          });
+          
+          router.push(`/recharge-success?${params.toString()}`);
         }, 1500);
       }
     } catch (error) {
@@ -220,302 +273,451 @@ const RechargePage = () => {
   };
 
   return (
-    <div className="container py-10">
-      <HeaderName />
-      
-      <div className="max-w-6xl mx-auto">
-        {/* Tab Navigation */}
-        <div className="bg-white shadow-lg rounded-lg overflow-hidden">
-          <div className="flex border-b">
-            <button
-              onClick={() => setActiveTab('mobile')}
-              className={`flex-1 px-6 py-4 text-center font-semibold flex items-center justify-center gap-2 ${
-                activeTab === 'mobile' 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              <MdPhoneAndroid className="text-xl" />
-              Mobile Recharge
-            </button>
-            <button
-              onClick={() => setActiveTab('bills')}
-              className={`flex-1 px-6 py-4 text-center font-semibold flex items-center justify-center gap-2 ${
-                activeTab === 'bills' 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              <MdElectricBolt className="text-xl" />
-              Bill Payments
-            </button>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">
+      <div className="container py-6 md:py-10 px-4 md:px-6">
+        <HeaderName />
+        
+        {/* Hero Section */}
+        <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 rounded-2xl shadow-xl p-6 md:p-8 text-white mb-8">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <div className="bg-white/20 backdrop-blur-sm p-4 rounded-xl">
+                <FaMobile className="text-3xl" />
+              </div>
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold mb-2">Quick Recharge & Bill Payments</h1>
+                <p className="text-blue-100">Instant mobile recharge and utility bill payments</p>
+              </div>
+            </div>
+            
+            {/* Mode Toggle */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+              <div className="flex items-center gap-4">
+                <span className="text-sm font-medium">Mode:</span>
+                <div className="flex bg-white/20 rounded-lg p-1">
+                  <button
+                    onClick={() => setRechargeMode('demo')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                      rechargeMode === 'demo' 
+                        ? 'bg-white text-blue-600 shadow-lg' 
+                        : 'text-white/80 hover:text-white'
+                    }`}
+                  >
+                    Demo Mode
+                  </button>
+                  <button
+                    onClick={() => setRechargeMode('real')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                      rechargeMode === 'real' 
+                        ? 'bg-white text-blue-600 shadow-lg' 
+                        : 'text-white/80 hover:text-white'
+                    }`}
+                  >
+                    Real Mode
+                  </button>
+                </div>
+              </div>
+              <div className="mt-2 text-xs text-blue-200">
+                {rechargeMode === 'demo' ? 'Test transactions without real money' : 'Real money transactions'}
+              </div>
+            </div>
           </div>
+        </div>
 
-          {/* User Account Info */}
-          <div className="bg-gray-50 px-6 py-4 border-b">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <p className="text-sm text-gray-600">Account Number</p>
-                <p className="font-mono font-semibold">{formatAccountNumber(userAccountNumber)}</p>
+        <div className="max-w-6xl mx-auto">
+          {/* Account Info Card */}
+          <div className="bg-white rounded-2xl shadow-xl p-6 mb-8 border border-gray-100">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="flex items-center gap-3">
+                <div className="bg-blue-100 p-3 rounded-xl">
+                  <MdAccountBalance className="text-blue-600 text-xl" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Account Number</p>
+                  <p className="font-mono font-semibold text-gray-800">{formatAccountNumber(userAccountNumber)}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-gray-600">Account Holder</p>
-                <p className="font-semibold">{user?.name}</p>
+              
+              <div className="flex items-center gap-3">
+                <div className="bg-green-100 p-3 rounded-xl">
+                  <MdVerified className="text-green-600 text-xl" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Account Holder</p>
+                  <p className="font-semibold text-gray-800">{user?.name}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-gray-600">Available Balance</p>
-                <p className="font-semibold text-green-600">₹{userBalance.toLocaleString()}</p>
+              
+              <div className="flex items-center gap-3">
+                <div className="bg-purple-100 p-3 rounded-xl">
+                  <BiMoney className="text-purple-600 text-xl" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Available Balance</p>
+                  <p className={`font-semibold text-lg transition-all duration-500 ${
+                    balanceAnimation ? 'text-green-600 scale-110' : 'text-green-600'
+                  }`}>
+                    ₹{userBalance.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <div className="bg-orange-100 p-3 rounded-xl">
+                  <MdSecurity className="text-orange-600 text-xl" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Transaction Mode</p>
+                  <p className="font-semibold text-gray-800 capitalize">{rechargeMode}</p>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="p-6">
-            {activeTab === 'mobile' ? (
-              /* Mobile Recharge Form */
-              <form onSubmit={handleRecharge} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Mobile Number
-                    </label>
-                    <input
-                      type="tel"
-                      name="mobileNumber"
-                      value={rechargeData.mobileNumber}
-                      onChange={handleInputChange}
-                      placeholder="Enter 10-digit mobile number"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      maxLength="10"
-                      pattern="[6-9][0-9]{9}"
-                      required
-                    />
-                  </div>
+          {/* Main Content */}
+          <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+            {/* Tab Navigation */}
+            <div className="flex border-b border-gray-200">
+              <button
+                onClick={() => setActiveTab('mobile')}
+                className={`flex-1 px-6 py-4 text-center font-semibold flex items-center justify-center gap-3 transition-all ${
+                  activeTab === 'mobile' 
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg' 
+                    : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <FaMobile className="text-xl" />
+                Mobile Recharge
+              </button>
+              <button
+                onClick={() => setActiveTab('bills')}
+                className={`flex-1 px-6 py-4 text-center font-semibold flex items-center justify-center gap-3 transition-all ${
+                  activeTab === 'bills' 
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg' 
+                    : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <MdElectricBolt className="text-xl" />
+                Bill Payments
+              </button>
+            </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Select Operator
-                    </label>
-                    <select
-                      name="operator"
-                      value={rechargeData.operator}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    >
-                      <option value="">Choose Operator</option>
-                      {mobileOperators.map(op => (
-                        <option key={op.id} value={op.id}>
-                          {op.logo} {op.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* Popular Plans */}
-                {plans.length > 0 && (
-                  <div>
-                    <h3 className="text-lg font-semibold mb-4">Popular Plans</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {plans.map((plan, index) => (
-                        <div
-                          key={index}
-                          onClick={() => handlePlanSelect(plan)}
-                          className={`border rounded-lg p-4 cursor-pointer transition-all hover:shadow-md ${
-                            rechargeData.amount === plan.amount.toString()
-                              ? 'border-blue-500 bg-blue-50'
-                              : 'border-gray-200 hover:border-blue-300'
-                          }`}
-                        >
-                          <div className="flex justify-between items-start mb-2">
-                            <div className="text-xl font-bold text-blue-600">₹{plan.amount}</div>
-                            {rechargeData.amount === plan.amount.toString() && (
-                              <FaCheckCircle className="text-blue-500" />
-                            )}
-                          </div>
-                          <div className="text-sm text-gray-600 space-y-1">
-                            <p><strong>Validity:</strong> {plan.validity}</p>
-                            <p><strong>Data:</strong> {plan.data}</p>
-                            <p>{plan.description}</p>
-                          </div>
+            <div className="p-6 md:p-8">
+              {activeTab === 'mobile' ? (
+                /* Enhanced Mobile Recharge Form */
+                <form onSubmit={handleRecharge} className="space-y-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="block text-sm font-semibold text-gray-700">
+                        Mobile Number
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="tel"
+                          name="mobileNumber"
+                          value={rechargeData.mobileNumber}
+                          onChange={handleInputChange}
+                          placeholder="Enter 10-digit mobile number"
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                          maxLength="10"
+                          pattern="[6-9][0-9]{9}"
+                          required
+                        />
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                          <FaMobile className="text-gray-400" />
                         </div>
-                      ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block text-sm font-semibold text-gray-700">
+                        Select Operator
+                      </label>
+                      <div className="relative">
+                        <select
+                          name="operator"
+                          value={rechargeData.operator}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 appearance-none"
+                          required
+                        >
+                          <option value="">Choose Operator</option>
+                          {mobileOperators.map(op => (
+                            <option key={op.id} value={op.id} className="py-2">
+                              {op.logo} {op.name}
+                            </option>
+                          ))}
+                        </select>
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                          <FaShieldAlt className="text-gray-400" />
+                        </div>
+                      </div>
                     </div>
                   </div>
-                )}
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Recharge Amount (₹)
-                  </label>
-                  <input
-                    type="number"
-                    name="amount"
-                    value={rechargeData.amount}
-                    onChange={handleInputChange}
-                    placeholder="Enter amount"
-                    min="10"
-                    max={userBalance}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                </div>
+                  {/* Enhanced Popular Plans */}
+                  {plans.length > 0 && (
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3">
+                        <FaStar className="text-yellow-500 text-xl" />
+                        <h3 className="text-xl font-bold text-gray-800">Popular Plans</h3>
+                        {operatorDetails && (
+                          <span className="text-sm text-gray-600">({operatorDetails.name})</span>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {plans.map((plan, index) => (
+                          <div
+                            key={index}
+                            onClick={() => handlePlanSelect(plan)}
+                            className={`border-2 rounded-xl p-4 cursor-pointer transition-all duration-300 hover:shadow-lg ${
+                              rechargeData.amount === plan.amount.toString()
+                                ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-purple-50 shadow-lg'
+                                : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
+                            }`}
+                          >
+                            <div className="flex justify-between items-start mb-3">
+                              <div className="text-2xl font-bold text-blue-600">₹{plan.amount}</div>
+                              {rechargeData.amount === plan.amount.toString() && (
+                                <FaCheckCircle className="text-blue-500 text-xl" />
+                              )}
+                            </div>
+                            <div className="space-y-2 text-sm">
+                              <div className="flex items-center gap-2">
+                                <FaBolt className="text-yellow-500" />
+                                <span className="font-medium">Validity: {plan.validity}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <FaWifi className="text-green-500" />
+                                <span className="font-medium">Data: {plan.data}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <FaMobile className="text-blue-500" />
+                                <span className="text-gray-600">{plan.description}</span>
+                              </div>
+                              {plan.cashback && (
+                                <div className="flex items-center gap-2 bg-green-100 p-2 rounded-lg">
+                                  <FaGift className="text-green-600" />
+                                  <span className="text-green-700 font-medium">Cashback: {plan.cashback}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 disabled:bg-gray-400 flex items-center justify-center gap-2 font-semibold"
-                >
-                  <MdPhoneAndroid className="text-xl" />
-                  Recharge Now
-                </button>
-              </form>
-            ) : (
-              /* Bill Payment Form */
-              <form onSubmit={handleRecharge} className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-4">
-                    Select Bill Type
-                  </label>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {billTypes.map(bill => {
-                      const IconComponent = bill.icon;
-                      return (
-                        <div
-                          key={bill.id}
-                          onClick={() => setRechargeData(prev => ({ ...prev, billType: bill.id }))}
-                          className={`border rounded-lg p-4 cursor-pointer text-center transition-all hover:shadow-md ${
-                            rechargeData.billType === bill.id
-                              ? 'border-blue-500 bg-blue-50'
-                              : 'border-gray-200 hover:border-blue-300'
-                          }`}
-                        >
-                          <IconComponent 
-                            className="text-3xl mx-auto mb-2" 
-                            style={{ color: bill.color }} 
-                          />
-                          <p className="font-medium text-sm">{bill.name}</p>
-                          {rechargeData.billType === bill.id && (
-                            <FaCheckCircle className="text-blue-500 mx-auto mt-2" />
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Consumer/Account Number
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700">
+                      Recharge Amount (₹)
                     </label>
-                    <input
-                      type="text"
-                      name="consumerNumber"
-                      value={rechargeData.consumerNumber}
-                      onChange={handleInputChange}
-                      placeholder="Enter consumer number"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
+                    <div className="relative">
+                      <input
+                        type="number"
+                        name="amount"
+                        value={rechargeData.amount}
+                        onChange={handleInputChange}
+                        placeholder="Enter amount"
+                        min="10"
+                        max={userBalance}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                        required
+                      />
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <BiMoney className="text-gray-400 text-xl" />
+                      </div>
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Bill Amount (₹)
-                    </label>
-                    <input
-                      type="number"
-                      name="billAmount"
-                      value={rechargeData.billAmount}
-                      onChange={handleInputChange}
-                      placeholder="Enter bill amount"
-                      min="10"
-                      max={userBalance}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-green-600 text-white py-3 px-4 rounded-md hover:bg-green-700 disabled:bg-gray-400 flex items-center justify-center gap-2 font-semibold"
-                >
-                  <BiMoney className="text-xl" />
-                  Pay Bill
-                </button>
-              </form>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Confirmation Modal */}
-      {showConfirmation && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h2 className="text-xl font-bold mb-4">
-              Confirm {activeTab === 'mobile' ? 'Recharge' : 'Bill Payment'}
-            </h2>
-            <div className="space-y-3 mb-6">
-              {activeTab === 'mobile' ? (
-                <>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Mobile Number:</span>
-                    <span className="font-semibold">{rechargeData.mobileNumber}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Operator:</span>
-                    <span className="font-semibold">
-                      {mobileOperators.find(op => op.id === rechargeData.operator)?.name}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Amount:</span>
-                    <span className="font-semibold text-lg">₹{parseFloat(rechargeData.amount).toLocaleString()}</span>
-                  </div>
-                </>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-6 rounded-xl hover:from-blue-700 hover:to-purple-700 disabled:bg-gray-400 flex items-center justify-center gap-3 font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300"
+                  >
+                    <FaMobile className="text-xl" />
+                    {loading ? 'Processing...' : 'Recharge Now'}
+                  </button>
+                </form>
               ) : (
-                <>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Bill Type:</span>
-                    <span className="font-semibold">
-                      {billTypes.find(bill => bill.id === rechargeData.billType)?.name}
-                    </span>
+                /* Enhanced Bill Payment Form */
+                <form onSubmit={handleRecharge} className="space-y-8">
+                  <div className="space-y-4">
+                    <label className="block text-lg font-semibold text-gray-700 mb-4">
+                      Select Bill Type
+                    </label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {billTypes.map(bill => {
+                        const IconComponent = bill.icon;
+                        return (
+                          <div
+                            key={bill.id}
+                            onClick={() => setRechargeData(prev => ({ ...prev, billType: bill.id }))}
+                            className={`border-2 rounded-xl p-6 cursor-pointer text-center transition-all duration-300 hover:shadow-lg ${
+                              rechargeData.billType === bill.id
+                                ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-purple-50 shadow-lg'
+                                : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
+                            }`}
+                          >
+                            <IconComponent 
+                              className="text-4xl mx-auto mb-3" 
+                              style={{ color: bill.color }} 
+                            />
+                            <p className="font-semibold text-gray-800 mb-1">{bill.name}</p>
+                            <p className="text-xs text-gray-600">{bill.description}</p>
+                            {rechargeData.billType === bill.id && (
+                              <FaCheckCircle className="text-blue-500 mx-auto mt-3 text-xl" />
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Consumer Number:</span>
-                    <span className="font-semibold">{rechargeData.consumerNumber}</span>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="block text-sm font-semibold text-gray-700">
+                        Consumer/Account Number
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          name="consumerNumber"
+                          value={rechargeData.consumerNumber}
+                          onChange={handleInputChange}
+                          placeholder="Enter consumer number"
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                          required
+                        />
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                          <MdReceipt className="text-gray-400" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block text-sm font-semibold text-gray-700">
+                        Bill Amount (₹)
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          name="billAmount"
+                          value={rechargeData.billAmount}
+                          onChange={handleInputChange}
+                          placeholder="Enter bill amount"
+                          min="10"
+                          max={userBalance}
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                          required
+                        />
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                          <BiMoney className="text-gray-400 text-xl" />
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Amount:</span>
-                    <span className="font-semibold text-lg">₹{parseFloat(rechargeData.billAmount).toLocaleString()}</span>
-                  </div>
-                </>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-4 px-6 rounded-xl hover:from-green-700 hover:to-emerald-700 disabled:bg-gray-400 flex items-center justify-center gap-3 font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300"
+                  >
+                    <BiMoney className="text-xl" />
+                    {loading ? 'Processing...' : 'Pay Bill'}
+                  </button>
+                </form>
               )}
             </div>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowConfirmation(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
-                disabled={loading}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmRecharge}
-                disabled={loading}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 flex items-center justify-center gap-2"
-              >
-                {loading ? <FaSpinner className="animate-spin" /> : <MdCheckCircle />}
-                {loading ? 'Processing...' : 'Confirm'}
-              </button>
-            </div>
           </div>
         </div>
-      )}
+
+        {/* Enhanced Confirmation Modal */}
+        {showConfirmation && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full transform transition-all">
+              <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 rounded-t-2xl text-white">
+                <div className="flex items-center gap-3">
+                  <div className="bg-white/20 backdrop-blur-sm p-3 rounded-xl">
+                    <IoShieldCheckmark className="text-2xl" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold">
+                      Confirm {activeTab === 'mobile' ? 'Recharge' : 'Bill Payment'}
+                    </h2>
+                    <p className="text-blue-100 text-sm">
+                      {rechargeMode === 'demo' ? 'Demo transaction' : 'Real money transaction'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="p-6 space-y-4">
+                {activeTab === 'mobile' ? (
+                  <>
+                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                      <span className="text-gray-600">Mobile Number:</span>
+                      <span className="font-semibold text-gray-800">{rechargeData.mobileNumber}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                      <span className="text-gray-600">Operator:</span>
+                      <span className="font-semibold text-gray-800">
+                        {mobileOperators.find(op => op.id === rechargeData.operator)?.name}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                      <span className="text-gray-600">Amount:</span>
+                      <span className="font-semibold text-lg text-green-600">₹{parseFloat(rechargeData.amount).toLocaleString()}</span>
+                    </div>
+                    {selectedPlan && (
+                      <div className="bg-blue-50 p-3 rounded-lg">
+                        <p className="text-sm text-blue-800">
+                          <strong>Plan:</strong> {selectedPlan.data} for {selectedPlan.validity}
+                        </p>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                      <span className="text-gray-600">Bill Type:</span>
+                      <span className="font-semibold text-gray-800">
+                        {billTypes.find(bill => bill.id === rechargeData.billType)?.name}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                      <span className="text-gray-600">Consumer Number:</span>
+                      <span className="font-semibold text-gray-800">{rechargeData.consumerNumber}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                      <span className="text-gray-600">Amount:</span>
+                      <span className="font-semibold text-lg text-green-600">₹{parseFloat(rechargeData.billAmount).toLocaleString()}</span>
+                    </div>
+                  </>
+                )}
+                
+                <div className="flex gap-3 pt-4">
+                  <button
+                    onClick={() => setShowConfirmation(false)}
+                    className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-xl hover:bg-gray-50 transition-all duration-200 font-medium"
+                    disabled={loading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={confirmRecharge}
+                    disabled={loading}
+                    className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 disabled:bg-gray-400 flex items-center justify-center gap-2 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300"
+                  >
+                    {loading ? <FaSpinner className="animate-spin" /> : <MdCheckCircle />}
+                    {loading ? 'Processing...' : 'Confirm'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
