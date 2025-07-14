@@ -77,30 +77,10 @@ const TransferPage = () => {
   const router = useRouter();
 
   useEffect(() => {
-    if (user && user.kyc_status !== 'completed') {
-      router.replace('/customer-service');
-    }
+    // Remove KYC check and custom message logic. No blocking or redirect for non-KYC users.
   }, [user, router]);
 
-  // KYC check and custom message (do NOT redirect)
-  const showKycBlock = user && user.kyc_status !== 'completed';
-
-  if (showKycBlock) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
-        <div className="bg-white p-8 rounded-xl shadow-lg text-center">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">KYC Required</h2>
-          <p className="text-gray-700 mb-4">You must complete your KYC to access this section.</p>
-          <button
-            onClick={() => router.replace('/customer-service')}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-          >
-            Go to Customer Service
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // Remove KYC check and custom message logic. No blocking or redirect for non-KYC users.
 
   // Add UPI transfer tab/section
   const [activeTab, setActiveTab] = useState('internal'); // 'internal' or 'upi'
