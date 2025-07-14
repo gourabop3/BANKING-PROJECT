@@ -211,37 +211,6 @@ export default function AboutPage() {
             </div>
           </div>
         </div>
-
-        {/* Developer Section */}
-        <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Meet the Developer</h2>
-            <div className="mb-6">
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">Gourab Mullick</h3>
-              <p className="text-gray-600">Full Stack Developer • West Bengal, India</p>
-            </div>
-            
-            {/* Social Media Links */}
-            <div className="flex justify-center gap-4 flex-wrap mb-6">
-              {socialLinks.map(({ href, label, icon: Icon }) => (
-                <a
-                  key={label}
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex items-center gap-2 px-4 py-3 rounded-lg border border-gray-300 bg-white hover:shadow-lg transition-all duration-300 hover:scale-105 hover:border-blue-500"
-                >
-                  <Icon className="text-xl text-gray-600 transition-all duration-300 group-hover:text-blue-600 group-hover:scale-110" />
-                  <span className="font-medium text-gray-700 group-hover:text-blue-600">{label}</span>
-                </a>
-              ))}
-            </div>
-            
-            <p className="text-gray-600 text-sm max-w-2xl mx-auto">
-              Passionate about building secure, scalable fintech solutions that make banking accessible and user-friendly for everyone.
-            </p>
-          </div>
-        </div>
       </div>
     </div>
   );
