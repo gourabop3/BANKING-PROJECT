@@ -17,6 +17,24 @@ const UPIPage = () => {
     }
   }, [user, router]);
 
+  // KYC check and custom message
+  if (user && user.kyc_status !== 'completed') {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
+        <div className="bg-white p-8 rounded-xl shadow-lg text-center">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">KYC Required</h2>
+          <p className="text-gray-700 mb-4">You must complete your KYC to access this section.</p>
+          <button
+            onClick={() => router.replace('/customer-service')}
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+          >
+            Go to Customer Service
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const [activeTab, setActiveTab] = useState('pay');
   const [upiInfo, setUpiInfo] = useState(null);
   const [qrCode, setQrCode] = useState(null);
