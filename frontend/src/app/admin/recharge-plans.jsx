@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import AdminSidebar from '../(root)/admin/+__(components)/AdminSidebar';
+import AdminSidebar from './+__(components)/AdminSidebar';
 import { axiosClient } from '@/utils/AxiosClient';
 import { FaEdit, FaTrash, FaPlus } from 'react-icons/fa';
 
@@ -42,7 +42,7 @@ export default function AdminRechargePlansPage() {
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-blue-50 to-purple-100">
       <AdminSidebar />
-      <main className="flex-1 p-4 md:p-8 overflow-y-auto">
+      <main className="flex-1 p-8 overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold text-blue-900">Recharge Plans</h1>
           <button onClick={() => openModal()} className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"><FaPlus /> Add Plan</button>

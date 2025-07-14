@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import AdminSidebar from '../(root)/admin/+__(components)/AdminSidebar';
+import AdminSidebar from './+__(components)/AdminSidebar';
 import UserTable from './+__(components)/UserTable';
 import UserDetailsModal from './+__(components)/UserDetailsModal';
 import BulkActionsBar from './+__(components)/BulkActionsBar';
@@ -51,9 +51,9 @@ export default function AdminUsersPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-blue-50 to-purple-100">
+    <div className="flex">
       <AdminSidebar />
-      <main className="flex-1 p-4 md:p-8 overflow-y-auto">
+      <main className="flex-1 p-8">
         <h1 className="text-2xl font-bold mb-4">User Management</h1>
         <div className="flex gap-2 mb-4">
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name/email" className="border p-2 rounded" />
