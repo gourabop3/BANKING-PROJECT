@@ -19,7 +19,8 @@ export default function AddNewFdModel({ isUpdate, setIsUpdate }) {
   const initialStates = {
     amount: '',
     account: '',
-    apply_for: ''
+    apply_for: '',
+    date: ''
   }
 
   const validationSchema = yup.object({
@@ -32,6 +33,7 @@ export default function AddNewFdModel({ isUpdate, setIsUpdate }) {
       .min(3, "Purpose must be at least 3 characters")
       .max(50, "Purpose must be less than 50 characters")
       .required("Purpose is Required"),
+    date: yup.date().required("Date is required")
   })
 
   const onSubmitHandler = async (values, { resetForm }) => {
@@ -54,7 +56,8 @@ export default function AddNewFdModel({ isUpdate, setIsUpdate }) {
       const response = await axiosClient.post('/fd/add-new', {
         amount: parseInt(values.amount),
         account: values.account,
-        apply_for: values.apply_for.trim()
+        apply_for: values.apply_for.trim(),
+        date: values.date
       }, {
         headers: {
           'Authorization': 'Bearer ' + token
@@ -226,6 +229,19 @@ export default function AddNewFdModel({ isUpdate, setIsUpdate }) {
                                   })()}
                                 </div>
                               )}
+                            </div>
+
+                            <div>
+                              <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">
+                                Deposit Date <span className="text-red-500">*</span>
+                              </label>
+                              <Field
+                                type="date"
+                                name="date"
+                                id="date"
+                                className='w-full bg-transparent border border-green-300 focus:border-green-500 focus:ring-2 focus:ring-green-200 rounded-md py-3 px-4 outline-none transition-all'
+                              />
+                              <ErrorMessage className='text-red-500 text-sm mt-1' component={'p'} name='date' />
                             </div>
 
                             <div>

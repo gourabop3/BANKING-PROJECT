@@ -365,6 +365,20 @@ class AuthService{
             throw new ApiError(500, "Email verification failed")
         }
     }
+
+    static async changePassword(user, oldPassword, newPassword) {
+        const foundUser = await UserModel.findById(user._id).select('+password');
+        if (!foundUser) {
+            throw new ApiError(404, 'User not found');
+        }
+        const isMatch = await bcryptjs.compare(oldPassword, foundUser.password);
+        if (!isMatch) {
+            throw new ApiError(400, 'Old password is incorrect');
+        }
+        foundUser.password = newPassword;
+        await foundUser.save();
+        return { msg: 'Password changed successfully.' };
+    }
 }
 
 module.exports =AuthService

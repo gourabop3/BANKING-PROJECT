@@ -38,7 +38,8 @@ class FixDepositService{
             apply_for:body.apply_for,
             user:user,
             remark:`Fund Deposit ₹${body.amount}`,
-            interest_amount:interest_amount
+            interest_amount:interest_amount,
+            date: body.date || Date.now()
         })
 
         // add transaction

@@ -40,4 +40,8 @@ router.route('/verify-email')
 .post(AuthMiddleware,AuthValidation.VerifyOTP,ValidationMiddleware,AuthController.VerifyEmailOTP)
 
 
+router.route('/change-password')
+  .post(AuthMiddleware, AuthController.changePassword)
+
+
 module.exports = router

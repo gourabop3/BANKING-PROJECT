@@ -35,6 +35,12 @@ class AuthController{
         const res_obj = await AuthService.VerifyEmailOTP(req.user,req.body);
         res.status(200).send(res_obj)
     }
+
+    static async changePassword(req, res) {
+        const { oldPassword, newPassword } = req.body;
+        const res_obj = await AuthService.changePassword(req.user, oldPassword, newPassword);
+        res.status(200).send(res_obj);
+    }
  
     
     
