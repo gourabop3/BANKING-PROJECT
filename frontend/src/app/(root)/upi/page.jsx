@@ -11,13 +11,7 @@ import { useRouter } from 'next/navigation';
 const UPIPage = () => {
   const { user } = useMainContext();
   const router = useRouter();
-  useEffect(() => {
-    if (user && user.kyc_status !== 'completed') {
-      router.replace('/customer-service');
-    }
-  }, [user, router]);
-
-  // Remove KYC check and custom message logic. No blocking or redirect for non-KYC users.
+  // Remove all KYC-related redirect or blocking logic. No early return or router.replace for non-KYC users.
 
   const [activeTab, setActiveTab] = useState('pay');
   const [upiInfo, setUpiInfo] = useState(null);
