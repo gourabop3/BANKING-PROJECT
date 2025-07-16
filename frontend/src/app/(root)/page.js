@@ -23,11 +23,11 @@ const useAnimatedCounter = (end, duration = 2000) => {
 
   useEffect(() => {
     if (counterRef.current) {
-      counterRef.current.cancel();
+      cancelAnimationFrame(counterRef.current);
     }
 
     const startTime = Date.now();
-    const startValue = current;
+    const startValue = 0; // Always start from 0
     
     const animate = () => {
       const elapsed = Date.now() - startTime;
@@ -51,7 +51,7 @@ const useAnimatedCounter = (end, duration = 2000) => {
         cancelAnimationFrame(counterRef.current);
       }
     };
-  }, [end, duration]);
+  }, [end, duration]); // Removed 'current' from dependencies
 
   return current;
 };
@@ -173,7 +173,7 @@ const HomePage=()=>{
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold mb-2">Welcome back, {user?.name}! 👋</h2>
-              <p className="text-blue-100">Here's your financial overview for today</p>
+              <p className="text-blue-100">Here&apos;s your financial overview for today</p>
             </div>
             <MdTrendingUp className="text-4xl animate-bounce" />
           </div>
