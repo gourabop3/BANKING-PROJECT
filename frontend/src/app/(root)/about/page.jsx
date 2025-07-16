@@ -160,55 +160,64 @@ export default function AboutPage() {
           </div>
         </div>
 
-        {/* Architecture & Design Decisions */}
-        <div className="bg-white rounded-2xl shadow-xl p-6 mb-12 border border-gray-100">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Why These Technologies?</h2>
-            <p className="text-gray-600">Strategic technology choices for a secure and scalable banking platform</p>
+        {/* Developer Social Links */}
+        <div className="bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 rounded-2xl shadow-xl p-8 mb-12 relative overflow-hidden">
+          {/* Background decorative elements */}
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-blue-600/20 backdrop-blur-sm"></div>
+          <div className="absolute top-4 right-4 w-20 h-20 bg-white/10 rounded-full blur-xl"></div>
+          <div className="absolute bottom-4 left-4 w-16 h-16 bg-white/10 rounded-full blur-lg"></div>
+          
+          <div className="relative z-10 text-center mb-10">
+            <h2 className="text-4xl font-bold text-white mb-3 drop-shadow-lg">
+              Let's Connect!
+            </h2>
+            <p className="text-purple-100 text-lg font-medium">
+              Follow me on social media and get in touch
+            </p>
           </div>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="bg-blue-50 p-6 rounded-lg">
-              <h3 className="text-xl font-semibold text-blue-900 mb-3">Security First Approach</h3>
-              <div className="space-y-2 text-gray-700">
-                <div className="flex items-start gap-2">
-                  <span className="text-blue-600 text-lg mt-1">•</span>
-                  <span><strong>JWT</strong> for stateless authentication and secure API access</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-blue-600 text-lg mt-1">•</span>
-                  <span><strong>bcryptjs</strong> for one-way password hashing protection</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-blue-600 text-lg mt-1">•</span>
-                  <span><strong>Express Validator</strong> for input sanitization and validation</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-blue-600 text-lg mt-1">•</span>
-                  <span><strong>HTTPS</strong> enforcement for all banking transactions</span>
-                </div>
-              </div>
-            </div>
-            <div className="bg-green-50 p-6 rounded-lg">
-              <h3 className="text-xl font-semibold text-green-900 mb-3">Scalability & Performance</h3>
-              <div className="space-y-2 text-gray-700">
-                <div className="flex items-start gap-2">
-                  <span className="text-green-600 text-lg mt-1">•</span>
-                  <span><strong>MongoDB</strong> for horizontal scaling and flexible data models</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-green-600 text-lg mt-1">•</span>
-                  <span><strong>Node.js</strong> for non-blocking I/O and concurrent connections</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-green-600 text-lg mt-1">•</span>
-                  <span><strong>Next.js</strong> for server-side rendering and optimal performance</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-green-600 text-lg mt-1">•</span>
-                  <span><strong>Cloudinary</strong> for CDN-based image delivery</span>
-                </div>
-              </div>
-            </div>
+          
+          <div className="relative z-10 flex flex-wrap justify-center gap-6">
+            {socialLinks.map(({ href, label, icon: Icon }) => {
+              const colorClasses = {
+                'GitHub': 'from-gray-700 to-gray-900 hover:from-gray-600 hover:to-gray-800 shadow-gray-500/30',
+                'LinkedIn': 'from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700 shadow-blue-500/30',
+                'Instagram': 'from-pink-500 to-red-500 hover:from-pink-400 hover:to-red-400 shadow-pink-500/30',
+                'Telegram': 'from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 shadow-cyan-500/30',
+                'Email': 'from-red-500 to-orange-500 hover:from-red-400 hover:to-orange-400 shadow-red-500/30'
+              };
+              
+              return (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`group relative bg-gradient-to-r ${colorClasses[label]} 
+                    px-8 py-4 rounded-2xl text-white font-semibold text-lg
+                    transform transition-all duration-300 hover:scale-110 hover:rotate-2
+                    shadow-lg hover:shadow-2xl backdrop-blur-sm`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Icon className="text-2xl group-hover:animate-bounce" />
+                    <span className="font-bold tracking-wide">{label}</span>
+                  </div>
+                  
+                  {/* Glowing effect */}
+                  <div className="absolute inset-0 rounded-2xl bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
+                  
+                  {/* Ripple effect */}
+                  <div className="absolute inset-0 rounded-2xl bg-white/10 scale-0 group-hover:scale-100 transition-transform duration-500"></div>
+                </a>
+              );
+            })}
+          </div>
+          
+          {/* Animated background particles */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute w-2 h-2 bg-white/30 rounded-full animate-ping" style={{top: '20%', left: '15%', animationDelay: '0s'}}></div>
+            <div className="absolute w-1 h-1 bg-white/40 rounded-full animate-ping" style={{top: '60%', left: '80%', animationDelay: '2s'}}></div>
+            <div className="absolute w-3 h-3 bg-white/20 rounded-full animate-pulse" style={{top: '80%', left: '20%', animationDelay: '1s'}}></div>
+            <div className="absolute w-2 h-2 bg-white/30 rounded-full animate-pulse" style={{top: '30%', right: '25%', animationDelay: '3s'}}></div>
           </div>
         </div>
       </div>
