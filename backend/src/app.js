@@ -98,7 +98,7 @@ app.use(express.urlencoded({ extended: false, limit: '25mb' }))
 app.use(cors(corsOptions))
 
 // Handle preflight requests
-app.options('*', cors(corsOptions));
+app.options('/*catchall', cors(corsOptions));
 
 app.use(morgan("dev"))
 app.use("/api/v1",require("./router"))
@@ -106,7 +106,7 @@ app.use("/api/v1",require("./router"))
 app.get('/', (req, res) => {
   res.send({msg:'Hello World!'})
 })
-app.use("",(req,res,next)=>{
+app.use((req,res,next)=>{
     next( new ApiError(404,"Not Found"))
 })
  
