@@ -15,7 +15,9 @@ import {
   FaBell,
   FaSearch,
   FaChevronLeft,
-  FaChevronRight
+  FaChevronRight,
+  FaBars,
+  FaTimes
 } from 'react-icons/fa';
 import { MdDashboard, MdNotifications, MdSettings } from 'react-icons/md';
 import { axiosClient } from '@/utils/AxiosClient';
@@ -24,6 +26,7 @@ export default function AdminDashboard() {
   const router = useRouter();
   const [tab, setTab] = useState('dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   // Data states
   const [users, setUsers] = useState([]);
@@ -50,153 +53,157 @@ export default function AdminDashboard() {
     totalAmount: 0
   });
 
-  // Auth check
+  // User management
+  const [userSearch, setUserSearch] = useState('');
+  const [userFilter, setUserFilter] = useState('all');
+  const [selectedUsers, setSelectedUsers] = useState([]);
+  const [userSort, setUserSort] = useState('name');
+
+  // Transaction management
+  const [txnSearch, setTxnSearch] = useState('');
+  const [txnFilter, setTxnFilter] = useState('all');
+  const [txnSort, setTxnSort] = useState('date');
+
+  // Check auth on mount
   useEffect(() => {
     if (typeof window !== 'undefined' && !localStorage.getItem('admin_token')) {
       router.push('/admin-login');
+      return;
     }
-  }, [router]);
+    
+    // Fetch initial data
+    fetchUsers();
+    fetchKYC();
+    fetchTransactions();
+    fetchDiscounts();
+  }, []);
 
-  // Fetch dashboard stats
-  useEffect(() => {
-    if (tab === 'dashboard') {
-      const fetchStats = async () => {
-        try {
-          const [usersRes, kycRes, txnRes] = await Promise.all([
-            axiosClient.get('/admin/users', {
-              headers: { Authorization: 'Bearer ' + localStorage.getItem('admin_token') }
-            }),
-            axiosClient.get('/kyc/pending', {
-              headers: { Authorization: 'Bearer ' + localStorage.getItem('admin_token') }
-            }),
-            axiosClient.get('/admin/transactions', {
-              headers: { Authorization: 'Bearer ' + localStorage.getItem('admin_token') }
-            })
-          ]);
-          
-          const totalAmount = txnRes.data.reduce((sum, txn) => sum + (txn.amount || 0), 0);
-          
-          setStats({
-            totalUsers: usersRes.data.users?.length || usersRes.data.length || 0,
-            pendingKYC: kycRes.data.length || 0,
-            totalTransactions: txnRes.data.length || 0,
-            totalAmount: totalAmount
-          });
-        } catch (error) {
-          console.error('Error fetching stats:', error);
-        }
-      };
-      
-      fetchStats();
+  // Fetch functions
+  const fetchUsers = async () => {
+    setUsersLoading(true);
+    try {
+      const response = await axiosClient.get('/admin/users', {
+        headers: { Authorization: 'Bearer ' + localStorage.getItem('admin_token') }
+      });
+      setUsers(response.data);
+      setStats(prev => ({ ...prev, totalUsers: response.data.length }));
+    } catch (error) {
+      setUsersError('Failed to fetch users');
+    } finally {
+      setUsersLoading(false);
     }
-  }, [tab]);
+  };
 
-  // Fetch users
-  useEffect(() => {
-    if (tab !== 'users') return;
-    setUsersLoading(true); setUsersError('');
-    axiosClient.get('/admin/users', {
-      headers: { Authorization: 'Bearer ' + localStorage.getItem('admin_token') }
-    })
-      .then(res => setUsers(res.data.users || res.data))
-      .catch(e => setUsersError('Failed to load users'))
-      .finally(() => setUsersLoading(false));
-  }, [tab]);
+  const fetchKYC = async () => {
+    setKycLoading(true);
+    try {
+      const response = await axiosClient.get('/admin/kyc/pending', {
+        headers: { Authorization: 'Bearer ' + localStorage.getItem('admin_token') }
+      });
+      setKycPending(response.data);
+      setStats(prev => ({ ...prev, pendingKYC: response.data.length }));
+    } catch (error) {
+      setKycError('Failed to fetch KYC data');
+    } finally {
+      setKycLoading(false);
+    }
+  };
 
-  // Fetch KYC pending
-  useEffect(() => {
-    if (tab !== 'kyc') return;
-    setKycLoading(true); setKycError('');
-    axiosClient.get('/kyc/pending', {
-      headers: { Authorization: 'Bearer ' + localStorage.getItem('admin_token') }
-    })
-      .then(res => setKycPending(res.data))
-      .catch(e => setKycError('Failed to load KYC applications'))
-      .finally(() => setKycLoading(false));
-  }, [tab]);
+  const fetchTransactions = async () => {
+    setTxnLoading(true);
+    try {
+      const response = await axiosClient.get('/admin/transactions', {
+        headers: { Authorization: 'Bearer ' + localStorage.getItem('admin_token') }
+      });
+      setTransactions(response.data);
+      setStats(prev => ({ 
+        ...prev, 
+        totalTransactions: response.data.length,
+        totalAmount: response.data.reduce((sum, txn) => sum + txn.amount, 0)
+      }));
+    } catch (error) {
+      setTxnError('Failed to fetch transactions');
+    } finally {
+      setTxnLoading(false);
+    }
+  };
 
-  // Fetch transactions
-  useEffect(() => {
-    if (tab !== 'transactions') return;
-    setTxnLoading(true); setTxnError('');
-    axiosClient.get('/admin/transactions', {
-      headers: { Authorization: 'Bearer ' + localStorage.getItem('admin_token') }
-    })
-      .then(res => setTransactions(res.data))
-      .catch(e => setTxnError('Failed to load transactions'))
-      .finally(() => setTxnLoading(false));
-  }, [tab]);
+  const fetchDiscounts = async () => {
+    setDiscountLoading(true);
+    try {
+      const response = await axiosClient.get('/admin/discounts', {
+        headers: { Authorization: 'Bearer ' + localStorage.getItem('admin_token') }
+      });
+      setDiscounts(response.data);
+    } catch (error) {
+      setDiscountError('Failed to fetch discounts');
+    } finally {
+      setDiscountLoading(false);
+    }
+  };
 
-  // Fetch discounts
-  useEffect(() => {
-    if (tab !== 'discounts') return;
-    setDiscountLoading(true); setDiscountError('');
-    axiosClient.get('/admin/discounts', {
-      headers: { Authorization: 'Bearer ' + localStorage.getItem('admin_token') }
-    })
-      .then(res => setDiscounts(res.data.discounts || res.data))
-      .catch(e => setDiscountError('Failed to load discounts'))
-      .finally(() => setDiscountLoading(false));
-  }, [tab]);
-
+  // Action handlers
   const handleLogout = () => {
     localStorage.removeItem('admin_token');
     router.push('/admin-login');
   };
 
-  // KYC Approve/Reject handlers
-  const handleKycApprove = async (id) => {
+  const handleUserAction = async (userId, action) => {
     try {
-      await axiosClient.post(`/kyc/approve/${id}`, {}, {
+      await axiosClient.post(`/admin/users/${userId}/${action}`, {}, {
         headers: { Authorization: 'Bearer ' + localStorage.getItem('admin_token') }
       });
-      setKycPending(kycPending.filter(u => u._id !== id));
-    } catch {
-      alert('Failed to approve KYC');
-    }
-  };
-  const handleKycReject = async (id) => {
-    try {
-      await axiosClient.post(`/kyc/reject/${id}`, {}, {
-        headers: { Authorization: 'Bearer ' + localStorage.getItem('admin_token') }
-      });
-      setKycPending(kycPending.filter(u => u._id !== id));
-    } catch {
-      alert('Failed to reject KYC');
+      fetchUsers();
+    } catch (error) {
+      console.error('Failed to perform user action:', error);
     }
   };
 
-  // Discount add handler
-  const handleAddDiscount = async (e) => {
-    e.preventDefault();
+  const handleKYCAction = async (kycId, action) => {
+    try {
+      await axiosClient.post(`/admin/kyc/${kycId}/${action}`, {}, {
+        headers: { Authorization: 'Bearer ' + localStorage.getItem('admin_token') }
+      });
+      fetchKYC();
+    } catch (error) {
+      console.error('Failed to perform KYC action:', error);
+    }
+  };
+
+  const handleAddDiscount = async () => {
     if (!discountValue) return;
+    
     setAddingDiscount(true);
     try {
       await axiosClient.post('/admin/discounts', {
         value: discountValue,
-        type: discountType,
-        isPercentage: discountType === 'percent',
-        active: true
+        type: discountType
       }, {
         headers: { Authorization: 'Bearer ' + localStorage.getItem('admin_token') }
       });
+      
       setDiscountValue('');
-      setDiscountType('percent');
-      // Refresh
       const res = await axiosClient.get('/admin/discounts', {
         headers: { Authorization: 'Bearer ' + localStorage.getItem('admin_token') }
       });
-      setDiscounts(res.data.discounts || res.data);
-    } catch {
-      alert('Failed to add discount');
+      setDiscounts(res.data);
+    } catch (error) {
+      console.error('Failed to add discount:', error);
+    } finally {
+      setAddingDiscount(false);
     }
-    setAddingDiscount(false);
   };
 
+  // Close mobile menu when tab changes
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [tab]);
+
+  // Sidebar items
   const sidebarItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: MdDashboard },
+    { id: 'dashboard', label: 'Dashboard', icon: FaTachometerAlt },
     { id: 'users', label: 'Users', icon: FaUsers },
-    { id: 'kyc', label: 'KYC Approvals', icon: FaIdCard },
+    { id: 'kyc', label: 'KYC Verification', icon: FaIdCard },
     { id: 'transactions', label: 'Transactions', icon: FaMoneyBill },
     { id: 'discounts', label: 'Discounts', icon: FaPercent },
     { id: 'settings', label: 'Settings', icon: FaCog }
@@ -204,8 +211,20 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen flex bg-gray-100">
+      {/* Mobile Overlay */}
+      {mobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-gradient-to-b from-gray-900 to-gray-800 text-white transition-all duration-300 ease-in-out shadow-xl`}>
+      <aside className={`${
+        sidebarCollapsed ? 'w-16' : 'w-64'
+      } ${
+        mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+      } lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-50 bg-gradient-to-b from-gray-900 to-gray-800 text-white transition-all duration-300 ease-in-out shadow-xl`}>
         {/* Sidebar Header */}
         <div className="p-4 border-b border-gray-700">
           <div className="flex items-center justify-between">
@@ -220,12 +239,20 @@ export default function AdminDashboard() {
                 </div>
               </div>
             )}
-            <button
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="p-2 rounded-lg hover:bg-gray-700 transition-colors"
-            >
-              {sidebarCollapsed ? <FaChevronRight /> : <FaChevronLeft />}
-            </button>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                className="hidden lg:block p-2 rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                {sidebarCollapsed ? <FaChevronRight /> : <FaChevronLeft />}
+              </button>
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="lg:hidden p-2 rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                <FaTimes />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -281,23 +308,32 @@ export default function AdminDashboard() {
           </button>
         </div>
       </aside>
+
       {/* Main Content */}
-      <main className="flex-1 bg-white">
+      <main className="flex-1 bg-white lg:ml-0">
         {/* Header */}
-        <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+        <header className="bg-white shadow-sm border-b border-gray-200 px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                {sidebarItems.find(item => item.id === tab)?.label || 'Dashboard'}
-              </h1>
-              <p className="text-gray-600">Manage your banking platform</p>
-            </div>
             <div className="flex items-center space-x-4">
+              <button
+                onClick={() => setMobileMenuOpen(true)}
+                className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <FaBars className="text-gray-600" />
+              </button>
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+                  {sidebarItems.find(item => item.id === tab)?.label || 'Dashboard'}
+                </h1>
+                <p className="text-gray-600 text-sm sm:text-base">Manage your banking platform</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <button className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full">
                 <FaBell className="text-lg" />
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">3</span>
               </button>
-              <div className="flex items-center space-x-2 bg-gray-100 rounded-full px-3 py-1">
+              <div className="hidden sm:flex items-center space-x-2 bg-gray-100 rounded-full px-3 py-1">
                 <FaUser className="text-gray-600" />
                 <span className="text-sm font-medium text-gray-700">Admin</span>
               </div>
@@ -306,61 +342,61 @@ export default function AdminDashboard() {
         </header>
 
         {/* Content Area */}
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {/* Dashboard Tab */}
           {tab === 'dashboard' && (
             <div className="space-y-6">
               {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-lg p-4 sm:p-6 text-white">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
-                      <FaUsers className="text-3xl" />
+                      <FaUsers className="text-2xl sm:text-3xl" />
                     </div>
-                    <div className="ml-4">
-                      <p className="text-blue-100">Total Users</p>
-                      <p className="text-2xl font-bold">{stats.totalUsers}</p>
+                    <div className="ml-3 sm:ml-4">
+                      <p className="text-blue-100 text-sm sm:text-base">Total Users</p>
+                      <p className="text-xl sm:text-2xl font-bold">{stats.totalUsers}</p>
                     </div>
                   </div>
                 </div>
                 
-                <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white">
+                <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl shadow-lg p-4 sm:p-6 text-white">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
-                      <FaIdCard className="text-3xl" />
+                      <FaIdCard className="text-2xl sm:text-3xl" />
                     </div>
-                    <div className="ml-4">
-                      <p className="text-green-100">Pending KYC</p>
-                      <p className="text-2xl font-bold">{stats.pendingKYC}</p>
+                    <div className="ml-3 sm:ml-4">
+                      <p className="text-green-100 text-sm sm:text-base">Pending KYC</p>
+                      <p className="text-xl sm:text-2xl font-bold">{stats.pendingKYC}</p>
                     </div>
                   </div>
                 </div>
                 
-                <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
+                <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl shadow-lg p-4 sm:p-6 text-white">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
-                      <FaMoneyBill className="text-3xl" />
+                      <FaMoneyBill className="text-2xl sm:text-3xl" />
                     </div>
-                    <div className="ml-4">
-                      <p className="text-purple-100">Transactions</p>
-                      <p className="text-2xl font-bold">{stats.totalTransactions}</p>
+                    <div className="ml-3 sm:ml-4">
+                      <p className="text-purple-100 text-sm sm:text-base">Transactions</p>
+                      <p className="text-xl sm:text-2xl font-bold">{stats.totalTransactions}</p>
                     </div>
                   </div>
                 </div>
                 
-                <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 text-white">
+                <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl shadow-lg p-4 sm:p-6 text-white">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
-                      <FaChartBar className="text-3xl" />
+                      <FaChartBar className="text-2xl sm:text-3xl" />
                     </div>
-                    <div className="ml-4">
-                      <p className="text-orange-100">Total Amount</p>
-                      <p className="text-2xl font-bold">₹{stats.totalAmount.toLocaleString()}</p>
+                    <div className="ml-3 sm:ml-4">
+                      <p className="text-orange-100 text-sm sm:text-base">Total Amount</p>
+                      <p className="text-xl sm:text-2xl font-bold">₹{stats.totalAmount.toLocaleString()}</p>
                     </div>
                   </div>
                 </div>
               </div>
-              
+
               {/* Quick Actions */}
               <div className="bg-white rounded-xl shadow-lg p-6">
                 <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
@@ -395,227 +431,488 @@ export default function AdminDashboard() {
               </div>
             </div>
           )}
-                  {/* Users Tab */}
+
+          {/* Users Tab */}
           {tab === 'users' && (
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-gray-900">All Users</h2>
-                <div className="flex items-center space-x-4">
+            <div className="space-y-6">
+              {/* Search and Filter */}
+              <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+                <div className="flex-1">
                   <div className="relative">
                     <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                     <input
                       type="text"
                       placeholder="Search users..."
-                      className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      value={userSearch}
+                      onChange={(e) => setUserSearch(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
-                  <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
-                    {users.length} Total
-                  </span>
                 </div>
-              </div>
-            {usersLoading ? <div className="text-center py-8">Loading users...</div> : usersError ? <div className="text-center text-red-600 py-8">{usersError}</div> : (
-              <div className="overflow-x-auto rounded-xl">
-                <table className="w-full min-w-[600px] bg-white rounded-xl shadow mb-8 text-sm md:text-base">
-                  <thead>
-                    <tr className="bg-blue-50">
-                      <th className="p-3">Name</th>
-                      <th className="p-3">Email</th>
-                      <th className="p-3">KYC</th>
-                      <th className="p-3">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {users.map(u => (
-                      <tr key={u._id || u.id} className="border-b hover:bg-blue-50">
-                        <td className="p-3">{u.name}</td>
-                        <td className="p-3">{u.email}</td>
-                        <td className="p-3 capitalize">{u.kyc_status || u.kyc}</td>
-                        <td className="p-3 capitalize">{u.status || (u.isActive ? 'active' : 'blocked')}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
-        {tab === 'kyc' && (
-          <div>
-            <h2 className="text-2xl font-bold mb-4 text-blue-800">KYC Approvals</h2>
-            {kycLoading ? <div className="text-center py-8">Loading KYC applications...</div> : kycError ? <div className="text-center text-red-600 py-8">{kycError}</div> : (
-              <div className="overflow-x-auto rounded-xl">
-                <table className="w-full min-w-[600px] bg-white rounded-xl shadow mb-8 text-sm md:text-base">
-                  <thead>
-                    <tr className="bg-blue-50">
-                      <th className="p-3">Name</th>
-                      <th className="p-3">Email</th>
-                      <th className="p-3">KYC Status</th>
-                      <th className="p-3">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {kycPending.map(u => (
-                      <tr key={u._id} className="border-b hover:bg-blue-50">
-                        <td className="p-3">{u.user?.name}</td>
-                        <td className="p-3">{u.user?.email}</td>
-                        <td className="p-3 capitalize">pending</td>
-                        <td className="p-3 space-x-2">
-                          <button onClick={() => handleKycApprove(u._id)} className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded">Approve</button>
-                          <button onClick={() => handleKycReject(u._id)} className="px-3 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded">Reject</button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
-        {tab === 'transactions' && (
-          <div>
-            <h2 className="text-2xl font-bold mb-4 text-blue-800">All Transactions</h2>
-            {txnLoading ? <div className="text-center py-8">Loading transactions...</div> : txnError ? <div className="text-center text-red-600 py-8">{txnError}</div> : (
-              <div className="overflow-x-auto rounded-xl">
-                <table className="w-full min-w-[600px] bg-white rounded-xl shadow mb-8 text-sm md:text-base">
-                  <thead>
-                    <tr className="bg-blue-50">
-                      <th className="p-3">User</th>
-                      <th className="p-3">Amount</th>
-                      <th className="p-3">Type</th>
-                      <th className="p-3">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {transactions.map(t => (
-                      <tr key={t._id || t.id} className="border-b hover:bg-blue-50">
-                        <td className="p-3">{t.user?.name || t.user}</td>
-                        <td className="p-3">₹{t.amount}</td>
-                        <td className="p-3 capitalize">{t.type}</td>
-                        <td className="p-3">{new Date(t.createdAt || t.date).toLocaleString()}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
-        {tab === 'discounts' && (
-          <div>
-            <h2 className="text-2xl font-bold mb-4 text-blue-800">Recharge Discounts</h2>
-            <form onSubmit={handleAddDiscount} className="flex flex-col md:flex-row gap-4 mb-6">
-              <input type="number" min="1" value={discountValue} onChange={e => setDiscountValue(e.target.value)} placeholder="Discount Value" className="border p-2 rounded w-full md:w-32" required />
-              <select value={discountType} onChange={e => setDiscountType(e.target.value)} className="border p-2 rounded w-full md:w-auto">
-                <option value="percent">Percent (%)</option>
-                <option value="flat">Flat (₹)</option>
-              </select>
-              <button type="submit" disabled={addingDiscount} className="bg-blue-600 text-white px-4 py-2 rounded w-full md:w-auto disabled:bg-blue-300">{addingDiscount ? 'Adding...' : 'Add Discount'}</button>
-            </form>
-            {discountLoading ? <div className="text-center py-8">Loading discounts...</div> : discountError ? <div className="text-center text-red-600 py-8">{discountError}</div> : (
-              <div className="overflow-x-auto rounded-xl">
-                <table className="w-full min-w-[400px] bg-white rounded-xl shadow text-sm md:text-base">
-                  <thead>
-                    <tr className="bg-blue-50">
-                      <th className="p-3">Value</th>
-                      <th className="p-3">Type</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {discounts.map(d => (
-                      <tr key={d._id || d.id} className="border-b hover:bg-blue-50">
-                        <td className="p-3">{d.value}{d.isPercentage || d.type === 'percent' ? '%' : '₹'}</td>
-                        <td className="p-3 capitalize">{d.type || (d.isPercentage ? 'percent' : 'flat')}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
-        
-        {/* Settings Tab */}
-        {tab === 'settings' && (
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">Settings</h2>
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* System Settings */}
-                <div className="border border-gray-200 rounded-lg p-4">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                    <FaCog className="mr-2" />
-                    System Settings
-                  </h3>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-700">Maintenance Mode</span>
-                      <button className="bg-gray-200 rounded-full w-12 h-6 flex items-center px-1">
-                        <div className="bg-white w-4 h-4 rounded-full shadow transform transition-transform"></div>
-                      </button>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-700">Enable New Registrations</span>
-                      <button className="bg-blue-500 rounded-full w-12 h-6 flex items-center justify-end px-1">
-                        <div className="bg-white w-4 h-4 rounded-full shadow transform transition-transform"></div>
-                      </button>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-700">Email Notifications</span>
-                      <button className="bg-blue-500 rounded-full w-12 h-6 flex items-center justify-end px-1">
-                        <div className="bg-white w-4 h-4 rounded-full shadow transform transition-transform"></div>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Security Settings */}
-                <div className="border border-gray-200 rounded-lg p-4">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                    <FaUser className="mr-2" />
-                    Security Settings
-                  </h3>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Session Timeout (minutes)
-                      </label>
-                      <input
-                        type="number"
-                        min="5"
-                        max="180"
-                        defaultValue="30"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Maximum Login Attempts
-                      </label>
-                      <input
-                        type="number"
-                        min="3"
-                        max="10"
-                        defaultValue="5"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-                  </div>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <select
+                    value={userFilter}
+                    onChange={(e) => setUserFilter(e.target.value)}
+                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="all">All Users</option>
+                    <option value="active">Active</option>
+                    <option value="blocked">Blocked</option>
+                  </select>
+                  <select
+                    value={userSort}
+                    onChange={(e) => setUserSort(e.target.value)}
+                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="name">Sort by Name</option>
+                    <option value="email">Sort by Email</option>
+                    <option value="date">Sort by Date</option>
+                  </select>
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
-                <button className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
-                  Reset to Default
-                </button>
-                <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                  Save Settings
-                </button>
+              {/* Users Table */}
+              <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          User
+                        </th>
+                        <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          KYC
+                        </th>
+                        <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {users.map((user, index) => (
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <div className="flex-shrink-0 h-10 w-10">
+                                <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                  <FaUser className="text-blue-600" />
+                                </div>
+                              </div>
+                              <div className="ml-4">
+                                <div className="text-sm font-medium text-gray-900">
+                                  {user.name || 'User'}
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                  {user.email || 'email@example.com'}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                              user.status === 'active' 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                              {user.status || 'Active'}
+                            </span>
+                          </td>
+                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                              user.kyc === 'verified' 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {user.kyc || 'Pending'}
+                            </span>
+                          </td>
+                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                            <button
+                              onClick={() => handleUserAction(user.id, 'block')}
+                              className="text-red-600 hover:text-red-900"
+                            >
+                              Block
+                            </button>
+                            <button
+                              onClick={() => handleUserAction(user.id, 'unblock')}
+                              className="text-green-600 hover:text-green-900"
+                            >
+                              Unblock
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+
+          {/* KYC Tab */}
+          {tab === 'kyc' && (
+            <div className="space-y-6">
+              <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Pending KYC Verifications</h3>
+                {kycLoading ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                    <p className="mt-4 text-gray-600">Loading KYC applications...</p>
+                  </div>
+                ) : kycPending.length === 0 ? (
+                  <div className="text-center py-8">
+                    <FaIdCard className="mx-auto h-12 w-12 text-gray-400" />
+                    <p className="mt-4 text-gray-600">No pending KYC applications</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            User
+                          </th>
+                          <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Documents
+                          </th>
+                          <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                          </th>
+                          <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {kycPending.map((kyc, index) => (
+                          <tr key={index} className="hover:bg-gray-50">
+                            <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center">
+                                <div className="flex-shrink-0 h-10 w-10">
+                                  <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                    <FaUser className="text-blue-600" />
+                                  </div>
+                                </div>
+                                <div className="ml-4">
+                                  <div className="text-sm font-medium text-gray-900">
+                                    {kyc.user?.name || 'User'}
+                                  </div>
+                                  <div className="text-sm text-gray-500">
+                                    {kyc.user?.email || 'email@example.com'}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                              <div className="space-x-2">
+                                <a
+                                  href={kyc.documents?.aadhaar}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:text-blue-900 text-sm"
+                                >
+                                  Aadhaar
+                                </a>
+                                <a
+                                  href={kyc.documents?.pan}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:text-blue-900 text-sm"
+                                >
+                                  PAN
+                                </a>
+                              </div>
+                            </td>
+                            <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                              <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                Pending
+                              </span>
+                            </td>
+                            <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                              <button
+                                onClick={() => handleKYCAction(kyc.id, 'approve')}
+                                className="text-green-600 hover:text-green-900"
+                              >
+                                Approve
+                              </button>
+                              <button
+                                onClick={() => handleKYCAction(kyc.id, 'reject')}
+                                className="text-red-600 hover:text-red-900"
+                              >
+                                Reject
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Transactions Tab */}
+          {tab === 'transactions' && (
+            <div className="space-y-6">
+              {/* Search and Filter */}
+              <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+                <div className="flex-1">
+                  <div className="relative">
+                    <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search transactions..."
+                      value={txnSearch}
+                      onChange={(e) => setTxnSearch(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <select
+                    value={txnFilter}
+                    onChange={(e) => setTxnFilter(e.target.value)}
+                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="all">All Transactions</option>
+                    <option value="credit">Credit</option>
+                    <option value="debit">Debit</option>
+                  </select>
+                  <select
+                    value={txnSort}
+                    onChange={(e) => setTxnSort(e.target.value)}
+                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="date">Sort by Date</option>
+                    <option value="amount">Sort by Amount</option>
+                    <option value="type">Sort by Type</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Transactions Table */}
+              <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Transaction ID
+                        </th>
+                        <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          User
+                        </th>
+                        <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Type
+                        </th>
+                        <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Amount
+                        </th>
+                        <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Date
+                        </th>
+                        <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Status
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {transactions.map((txn, index) => (
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {txn.id || `TXN${index + 1}`}
+                          </td>
+                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">{txn.user?.name || 'User'}</div>
+                            <div className="text-sm text-gray-500">{txn.user?.email || 'email@example.com'}</div>
+                          </td>
+                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                              txn.type === 'credit' 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                              {txn.type || 'Credit'}
+                            </span>
+                          </td>
+                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            ₹{txn.amount?.toLocaleString() || '0'}
+                          </td>
+                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {txn.date || new Date().toLocaleDateString()}
+                          </td>
+                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                              txn.status === 'completed' 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {txn.status || 'Completed'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Discounts Tab */}
+          {tab === 'discounts' && (
+            <div className="space-y-6">
+              {/* Add Discount Form */}
+              <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Add New Discount</h3>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex-1">
+                    <input
+                      type="number"
+                      placeholder="Discount value"
+                      value={discountValue}
+                      onChange={(e) => setDiscountValue(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <select
+                      value={discountType}
+                      onChange={(e) => setDiscountType(e.target.value)}
+                      className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="percent">Percentage</option>
+                      <option value="amount">Fixed Amount</option>
+                    </select>
+                  </div>
+                  <div>
+                    <button
+                      onClick={handleAddDiscount}
+                      disabled={addingDiscount || !discountValue}
+                      className="w-full sm:w-auto px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400 transition-colors"
+                    >
+                      {addingDiscount ? 'Adding...' : 'Add Discount'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Discounts List */}
+              <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Active Discounts</h3>
+                {discounts.length === 0 ? (
+                  <div className="text-center py-8">
+                    <FaPercent className="mx-auto h-12 w-12 text-gray-400" />
+                    <p className="mt-4 text-gray-600">No active discounts</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {discounts.map((discount, index) => (
+                      <div key={index} className="border border-gray-200 rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-2xl font-bold text-blue-600">
+                            {discount.type === 'percent' ? `${discount.value}%` : `₹${discount.value}`}
+                          </span>
+                          <span className="text-sm text-gray-500">
+                            {discount.type === 'percent' ? 'Percentage' : 'Fixed Amount'}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-3">
+                          {discount.description || 'No description'}
+                        </p>
+                        <button className="w-full px-4 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors">
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Settings Tab */}
+          {tab === 'settings' && (
+            <div className="space-y-6">
+              <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-6">System Settings</h3>
+                
+                {/* General Settings */}
+                <div className="space-y-6">
+                  <div>
+                    <h4 className="text-md font-medium text-gray-900 mb-4">General</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          System Name
+                        </label>
+                        <input
+                          type="text"
+                          defaultValue="CBI Banking System"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Support Email
+                        </label>
+                        <input
+                          type="email"
+                          defaultValue="support@cbibank.com"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Security Settings */}
+                  <div>
+                    <h4 className="text-md font-medium text-gray-900 mb-4">Security</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Session Timeout (minutes)
+                        </label>
+                        <input
+                          type="number"
+                          min="5"
+                          max="180"
+                          defaultValue="30"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Maximum Login Attempts
+                        </label>
+                        <input
+                          type="number"
+                          min="3"
+                          max="10"
+                          defaultValue="5"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-4 pt-6 border-t border-gray-200">
+                  <button className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                    Reset to Default
+                  </button>
+                  <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    Save Settings
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </main>
     </div>
