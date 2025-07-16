@@ -10,7 +10,7 @@ router.get('/status', AuthMiddleware, KYCController.status);
 
 // Admin routes
 router.get('/pending', AdminAuth, KYCController.listPending);
-router.post('/approve/:id', AdminAuth, KYCController.approve);
-router.post('/reject/:id', AdminAuth, KYCController.reject);
+router.put('/approve/:id', AdminAuth, KYCController.approve);
+router.put('/reject/:id', AdminAuth, KYCController.reject);
 
 module.exports = router;
