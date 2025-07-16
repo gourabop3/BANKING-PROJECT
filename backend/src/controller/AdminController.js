@@ -40,6 +40,36 @@ class AdminController {
         }
     }
 
+    static async getUserProfile(req, res, next) {
+        try {
+            const { id } = req.params;
+            const data = await AdminService.getUserProfile(id);
+            res.status(200).send(data);
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    static async getUserTransactions(req, res, next) {
+        try {
+            const { id } = req.params;
+            const data = await AdminService.getUserTransactions(id);
+            res.status(200).send(data);
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    static async sendEmailToUser(req, res, next) {
+        try {
+            const { userId, subject, message } = req.body;
+            const data = await AdminService.sendEmailToUser(userId, subject, message);
+            res.status(200).send(data);
+        } catch (err) {
+            next(err);
+        }
+    }
+
     static async listTransactions(req,res,next){
         try{
             const data = await AdminService.listTransactions();
@@ -55,6 +85,34 @@ class AdminController {
             const data = await AdminService.refundTransaction(id);
             res.status(200).send(data);
         }catch(err){
+            next(err);
+        }
+    }
+
+    static async getDiscounts(req, res, next) {
+        try {
+            const data = await AdminService.getDiscounts();
+            res.status(200).send(data);
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    static async addDiscount(req, res, next) {
+        try {
+            const data = await AdminService.addDiscount(req.body);
+            res.status(201).send(data);
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    static async deleteDiscount(req, res, next) {
+        try {
+            const { id } = req.params;
+            const data = await AdminService.deleteDiscount(id);
+            res.status(200).send(data);
+        } catch (err) {
             next(err);
         }
     }

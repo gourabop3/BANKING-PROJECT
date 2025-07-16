@@ -6,16 +6,26 @@ const AdminAuthMiddleware = require('../../middleware/AdminAuth');
 // Admin login
 router.post('/login', AdminController.loginAdmin);
 
-// user management
-router.post('/user/:id/activation',AdminAuthMiddleware,AdminController.toggleUserActivation);
-router.post('/user/:id/update-profile',AdminAuthMiddleware,AdminController.updateUserProfile);
+// User management
+router.put('/user/:id/toggle-activation', AdminAuthMiddleware, AdminController.toggleUserActivation);
+router.put('/user/:id/update-profile', AdminAuthMiddleware, AdminController.updateUserProfile);
+router.get('/user/:id/profile', AdminAuthMiddleware, AdminController.getUserProfile);
+router.get('/user/:id/transactions', AdminAuthMiddleware, AdminController.getUserTransactions);
 
-// list users
-router.get('/users',AdminAuthMiddleware,AdminController.listUsers);
+// Email functionality
+router.post('/send-email', AdminAuthMiddleware, AdminController.sendEmailToUser);
+
+// List users
+router.get('/users', AdminAuthMiddleware, AdminController.listUsers);
 
 // Transactions
-router.get('/transactions',AdminAuthMiddleware,AdminController.listTransactions);
-router.post('/transactions/:id/refund',AdminAuthMiddleware,AdminController.refundTransaction);
+router.get('/transactions', AdminAuthMiddleware, AdminController.listTransactions);
+router.post('/transactions/:id/refund', AdminAuthMiddleware, AdminController.refundTransaction);
+
+// Discount management
+router.get('/discounts', AdminAuthMiddleware, AdminController.getDiscounts);
+router.post('/discounts', AdminAuthMiddleware, AdminController.addDiscount);
+router.delete('/discounts/:id', AdminAuthMiddleware, AdminController.deleteDiscount);
 
 // Example protected route (placeholder for dashboard APIs)
 router.get('/stats', AdminAuthMiddleware, (req, res)=>{

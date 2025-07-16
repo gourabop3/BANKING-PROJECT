@@ -42,8 +42,9 @@ class KYCService {
   // Admin list pending
   static async listPending() {
     const list = await KYCApplicationModel.find({ status: 'pending' })
-      .populate('user', 'name email');
-    return list;
+      .populate('user', 'name email')
+      .sort({ createdAt: -1 });
+    return { success: true, data: list };
   }
 
   // Approve
@@ -56,7 +57,7 @@ class KYCService {
 
     await ProfileModel.findOneAndUpdate({ user: app.user }, { kyc_status: 'verified' });
 
-    return { msg: 'KYC approved' };
+    return { success: true, message: 'KYC approved successfully' };
   }
 
   // Reject
@@ -70,7 +71,7 @@ class KYCService {
 
     await ProfileModel.findOneAndUpdate({ user: app.user }, { kyc_status: 'rejected' });
 
-    return { msg: 'KYC rejected' };
+    return { success: true, message: 'KYC rejected successfully' };
   }
 }
 
