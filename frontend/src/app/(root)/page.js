@@ -141,11 +141,29 @@ const HomePage=()=>{
     { title: "Profile", icon: FaUser, link: "/profile", color: "bg-orange-500 hover:bg-orange-600" }
   ];
 
-  const recentTransactions = [
-    { type: "Credit", amount: "₹5,000", desc: "Salary Credit", time: "2 hrs ago", icon: FaArrowUp, color: "text-green-600" },
-    { type: "Debit", amount: "₹1,200", desc: "Mobile Recharge", time: "5 hrs ago", icon: FaArrowDown, color: "text-red-600" },
-    { type: "Credit", amount: "₹2,500", desc: "Transfer from John", time: "1 day ago", icon: FaArrowUp, color: "text-green-600" }
-  ];
+  // Get real user transactions or show appropriate message
+  const getRecentTransactions = () => {
+    // Check if user has transaction history
+    if (user?.transactions && user.transactions.length > 0) {
+      // Use real transaction data - get latest 3 transactions
+      return user.transactions
+        .slice(-3) // Get last 3 transactions
+        .reverse() // Show newest first
+        .map(transaction => ({
+          type: transaction.txn_type === 'credit' ? 'Credit' : 'Debit',
+          amount: `₹${transaction.amount?.toLocaleString() || '0'}`,
+          desc: transaction.description || transaction.txn_type || 'Transaction',
+          time: transaction.createdAt ? new Date(transaction.createdAt).toLocaleDateString() : 'Recent',
+          icon: transaction.txn_type === 'credit' ? FaArrowUp : FaArrowDown,
+          color: transaction.txn_type === 'credit' ? 'text-green-600' : 'text-red-600'
+        }));
+    }
+    
+    // If no transaction history, return empty array or placeholder message
+    return [];
+  };
+
+  const recentTransactions = getRecentTransactions();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 relative overflow-hidden">
@@ -217,23 +235,39 @@ const HomePage=()=>{
             Recent Transactions
           </h3>
           <div className="space-y-3">
-            {recentTransactions.map((transaction, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200 transform hover:scale-102"
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-full bg-white shadow-sm ${transaction.color}`}>
-                    <transaction.icon className="text-lg" />
+            {recentTransactions.length > 0 ? (
+              recentTransactions.map((transaction, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200 transform hover:scale-102"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-full bg-white shadow-sm ${transaction.color}`}>
+                      <transaction.icon className="text-lg" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-800">{transaction.desc}</p>
+                      <p className="text-sm text-gray-500">{transaction.time}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium text-gray-800">{transaction.desc}</p>
-                    <p className="text-sm text-gray-500">{transaction.time}</p>
-                  </div>
+                  <p className={`font-bold ${transaction.color}`}>{transaction.amount}</p>
                 </div>
-                <p className={`font-bold ${transaction.color}`}>{transaction.amount}</p>
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <FaChartLine className="text-3xl text-gray-400" />
+                </div>
+                <p className="text-gray-500 font-medium">No Recent Transactions</p>
+                <p className="text-gray-400 text-sm mt-1">Your transaction history will appear here</p>
+                <Link
+                  href="/transactions"
+                  className="inline-block mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200"
+                >
+                  View All Transactions
+                </Link>
               </div>
-            ))}
+            )}
           </div>
         </div>
 
