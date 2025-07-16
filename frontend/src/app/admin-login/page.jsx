@@ -21,7 +21,7 @@ export default function AdminLoginPage() {
       const data = await response.data;
       localStorage.setItem('admin_token', data.token);
       toast.success(data.msg || 'Login success');
-      router.push('/admin/dashboard');
+      router.push('/admin-dashboard');
     } catch (error) {
       toast.error(error.response?.data?.msg || error.message || 'Login failed');
     } finally {
