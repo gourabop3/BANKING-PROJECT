@@ -296,16 +296,30 @@ const HomePage=()=>{
 export default HomePage
 
 const DashboardCard = ({data, index})=>{
-  const [isShow,setIsShow] = useState(false);
+  const [isShow,setIsShow] = useState(true); // Show values by default
   const [isHovered, setIsHovered] = useState(false);
   
   // Animated counter for numeric values
-  const numericValue = typeof data.value === 'number' ? data.value : parseInt(data.value) || 0;
+  const numericValue = typeof data.value === 'number' ? data.value : (parseInt(data.value) || 0);
   const animatedValue = useAnimatedCounter(isShow ? numericValue : 0, 1500);
 
-  const displayValue = typeof data.value === 'number' 
-    ? (isShow ? `${data.prefix}${animatedValue.toLocaleString()}` : 'x'.repeat(data.value.toString().length))
-    : (isShow ? `${data.prefix}${data.value}` : 'x'.repeat(data.value.toString().length));
+  // Improved display logic
+  const getDisplayValue = () => {
+    if (!isShow) {
+      // Create masked version
+      const valueStr = data.value?.toString() || '0';
+      return 'x'.repeat(Math.max(valueStr.length, 3));
+    }
+    
+    // Show actual value
+    if (typeof data.value === 'number') {
+      return `${data.prefix || ''}${animatedValue.toLocaleString()}`;
+    } else {
+      return `${data.prefix || ''}${data.value || 'N/A'}`;
+    }
+  };
+
+  const displayValue = getDisplayValue();
 
   return (
     <div 
