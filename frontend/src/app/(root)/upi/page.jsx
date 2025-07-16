@@ -1,8 +1,8 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import HeaderName from '@/components/HeaderName';
-import { MdQrCode, MdSend, MdHistory, MdAccountBalance, MdPayment } from 'react-icons/md';
-import { FaDownload, FaShare, FaCopy, FaCheck } from 'react-icons/fa';
+import { MdSend, MdHistory, MdAccountBalance, MdPayment, MdRequest } from 'react-icons/md';
+import { FaCopy, FaCheck, FaHandHoldingUsd } from 'react-icons/fa';
 import Card from '@/components/ui/Card';
 import { useMainContext } from '@/context/MainContext';
 import { axiosClient } from '@/utils/AxiosClient';
@@ -15,7 +15,7 @@ const UPIPage = () => {
 
   const [activeTab, setActiveTab] = useState('pay');
   const [upiInfo, setUpiInfo] = useState(null);
-  const [qrCode, setQrCode] = useState(null);
+
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -28,13 +28,19 @@ const UPIPage = () => {
     pin: ''
   });
 
-  // QR generation form states
-  const [qrForm, setQrForm] = useState({
+  // Money request form states
+  const [requestForm, setRequestForm] = useState({
+    from_upi: '',
     amount: '',
     note: ''
   });
 
   const [validationResult, setValidationResult] = useState(null);
+  
+  // Money request states
+  const [requestStatus, setRequestStatus] = useState({ success: null, error: null });
+  const [requestLoading, setRequestLoading] = useState(false);
+  const [requestValidation, setRequestValidation] = useState(null);
 
   const [registrationForm, setRegistrationForm] = useState({
     upi_id: '',
@@ -106,27 +112,7 @@ const UPIPage = () => {
     }
   };
 
-  const generateQR = async () => {
-    setLoading(true);
-    try {
-      const currentToken = typeof window !== 'undefined' ? localStorage.getItem('token') : '';
-      if (!currentToken) return;
-      
-      const response = await axiosClient.get(`/upi/qr?amount=${qrForm.amount}&note=${qrForm.note}`, {
-        headers: {
-          'Authorization': `Bearer ${currentToken}`
-        }
-      });
-      const data = response.data;
-      if (response.status === 200) {
-        setQrCode(data);
-      }
-    } catch (error) {
-      console.error('Error generating QR:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+
 
   const validateUPI = async (upi_id) => {
     if (!upi_id) return;
@@ -420,13 +406,79 @@ const UPIPage = () => {
     }
   };
 
+  // Validate UPI for money request
+  const validateRequestUPI = async (upiId) => {
+    if (!upiId || !upiId.includes('@')) {
+      setRequestValidation(null);
+      return;
+    }
+    
+    try {
+      const response = await axiosClient.get(`/upi/validate/${upiId}`);
+      setRequestValidation({
+        valid: true,
+        user: response.data.user,
+        message: `Valid UPI ID - ${response.data.user?.name}`
+      });
+    } catch (error) {
+      setRequestValidation({
+        valid: false,
+        message: error.response?.data?.msg || 'Invalid UPI ID'
+      });
+    }
+  };
+
+  // Send money request
+  const sendMoneyRequest = async () => {
+    if (!requestForm.from_upi || !requestForm.amount) {
+      setRequestStatus({ success: null, error: 'Please fill all required fields' });
+      return;
+    }
+
+    if (!requestValidation?.valid) {
+      setRequestStatus({ success: null, error: 'Please enter a valid UPI ID' });
+      return;
+    }
+
+    setRequestLoading(true);
+    setRequestStatus({ success: null, error: null });
+
+    try {
+      const currentToken = typeof window !== 'undefined' ? localStorage.getItem('token') : '';
+      const response = await axiosClient.post('/upi/request-money', {
+        from_upi: requestForm.from_upi,
+        amount: requestForm.amount,
+        note: requestForm.note || 'Money request'
+      }, {
+        headers: { Authorization: `Bearer ${currentToken}` }
+      });
+
+      setRequestStatus({ 
+        success: 'Money request sent successfully!', 
+        error: null 
+      });
+      
+      // Reset form
+      setRequestForm({ from_upi: '', amount: '', note: '' });
+      setRequestValidation(null);
+      
+    } catch (error) {
+      setRequestStatus({ 
+        success: null, 
+        error: error.response?.data?.msg || 'Failed to send money request' 
+      });
+    } finally {
+      setRequestLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100">
       <div className="max-w-4xl mx-auto py-10 px-4">
         {/* Hero Header */}
         <div className="flex flex-col items-center mb-10">
           <div className="bg-gradient-to-tr from-blue-600 to-indigo-500 rounded-full p-4 shadow-lg mb-4">
-            <MdQrCode className="text-white text-5xl" />
+            <MdPayment className="text-white text-5xl" />
           </div>
           <h1 className="text-4xl font-extrabold text-gray-900 mb-2 tracking-tight">CBI Bank UPI</h1>
           <p className="text-lg text-gray-600 mb-2">Fast, Secure & Instant Payments</p>
@@ -460,7 +512,7 @@ const UPIPage = () => {
           <div className="bg-white/80 rounded-full p-1 shadow-md flex gap-2">
             {[
               { id: 'pay', label: 'Pay', icon: MdSend },
-              { id: 'receive', label: 'Receive', icon: MdQrCode },
+              { id: 'request', label: 'Request', icon: FaHandHoldingUsd },
               { id: 'history', label: 'History', icon: MdHistory }
             ].map(({ id, label, icon: Icon }) => (
               <button
@@ -611,77 +663,92 @@ const UPIPage = () => {
             </div>
           )}
 
-          {/* Receive Tab */}
-          {activeTab === 'receive' && (
+          {/* Request Tab */}
+          {activeTab === 'request' && (
             <div className="bg-white/90 rounded-2xl shadow-xl p-8 mb-8">
               <h2 className="text-2xl font-bold mb-6 flex items-center gap-2 text-blue-700">
-                <MdQrCode />
-                Receive Money
+                <FaHandHoldingUsd />
+                Request Money
               </h2>
               <div className="space-y-4 mb-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Amount (₹) - Optional
+                    Request From (UPI ID) *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Enter UPI ID (e.g., user@paytm)"
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    value={requestForm.from_upi}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setRequestForm(prev => ({ ...prev, from_upi: value }));
+                      if (value.includes('@')) {
+                        validateRequestUPI(value);
+                      }
+                    }}
+                  />
+                  {requestValidation && (
+                    <div className={`mt-2 text-sm ${requestValidation.valid ? 'text-green-600' : 'text-red-600'}`}>
+                      {requestValidation.message}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Amount (₹) *
                   </label>
                   <input
                     type="number"
                     placeholder="0.00"
                     className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    value={qrForm.amount}
-                    onChange={(e) => setQrForm(prev => ({ ...prev, amount: e.target.value }))}
+                    value={requestForm.amount}
+                    onChange={(e) => setRequestForm(prev => ({ ...prev, amount: e.target.value }))}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Note - Optional
+                    Note (Optional)
                   </label>
                   <input
                     type="text"
-                    placeholder="Payment for..."
+                    placeholder="What is this request for..."
                     className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    value={qrForm.note}
-                    onChange={(e) => setQrForm(prev => ({ ...prev, note: e.target.value }))}
+                    value={requestForm.note}
+                    onChange={(e) => setRequestForm(prev => ({ ...prev, note: e.target.value }))}
                   />
                 </div>
                 <button
-                  onClick={generateQR}
-                  disabled={loading}
-                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl font-semibold hover:scale-105 hover:shadow-lg transition-all disabled:opacity-50"
+                  onClick={sendMoneyRequest}
+                  disabled={requestLoading}
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-xl font-semibold hover:scale-105 hover:shadow-lg transition-all disabled:opacity-50"
                 >
-                  {loading ? 'Generating...' : 'Generate QR Code'}
+                  {requestLoading ? 'Sending Request...' : 'Send Money Request'}
                 </button>
               </div>
-              {qrCode && (
-                <div className="text-center">
-                  <div className="bg-white p-4 rounded-2xl border-2 border-gray-200 inline-block shadow-lg">
-                    <img 
-                      src={qrCode.qr} 
-                      alt="UPI QR Code" 
-                      className="w-64 h-64 mx-auto"
-                    />
-                  </div>
-                  <div className="mt-4 space-y-2">
-                    <p className="text-sm text-gray-600">
-                      Scan with any UPI app to pay {upiInfo?.name}
-                    </p>
-                    {qrCode.amount && (
-                      <p className="text-lg font-semibold text-blue-600">
-                        Amount: {formatCurrency(qrCode.amount)}
-                      </p>
-                    )}
-                    <div className="flex justify-center gap-2 mt-4">
-                      <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
-                        <FaDownload />
-                        Download
-                      </button>
-                      <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
-                        <FaShare />
-                        Share
-                      </button>
-                    </div>
-                  </div>
+              
+              {/* Status Messages */}
+              {requestStatus.success && (
+                <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-4">
+                  {requestStatus.success}
                 </div>
               )}
+              {requestStatus.error && (
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4">
+                  {requestStatus.error}
+                </div>
+              )}
+
+              {/* How it works */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h3 className="font-semibold text-blue-800 mb-2">How Money Request Works</h3>
+                <ul className="text-sm text-blue-700 space-y-1">
+                  <li>• Enter the UPI ID of the person you want to request money from</li>
+                  <li>• Specify the amount and add a note (optional)</li>
+                  <li>• They will receive a notification to approve/decline your request</li>
+                  <li>• Once approved, money will be transferred to your account</li>
+                </ul>
+              </div>
             </div>
           )}
 
@@ -746,9 +813,9 @@ const UPIPage = () => {
         <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
             {
-              icon: <MdQrCode className="text-3xl text-blue-600" />,
-              title: "QR Payments",
-              description: "Generate and scan QR codes for instant payments"
+              icon: <FaHandHoldingUsd className="text-3xl text-purple-600" />,
+              title: "Money Requests",
+              description: "Request money from other UPI users instantly"
             },
             {
               icon: <MdSend className="text-3xl text-green-600" />,
