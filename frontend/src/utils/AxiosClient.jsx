@@ -37,9 +37,21 @@ axiosClient.interceptors.request.use(
   (config) => {
     // Add auth token if available
     if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('token');
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+      // Check if this is an admin request
+      const isAdminRequest = config.url?.includes('/admin');
+      
+      if (isAdminRequest) {
+        // Use admin token for admin requests
+        const adminToken = localStorage.getItem('admin_token');
+        if (adminToken) {
+          config.headers.Authorization = `Bearer ${adminToken}`;
+        }
+      } else {
+        // Use regular token for user requests
+        const token = localStorage.getItem('token');
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
       }
     }
     
@@ -79,10 +91,19 @@ axiosClient.interceptors.response.use(
     
     // Handle specific error cases
     if (error.response?.status === 401) {
-      // Unauthorized - clear token and redirect to login
+      // Unauthorized - clear token and redirect to appropriate login
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('token');
-        window.location.href = '/login';
+        const isAdminRequest = error.config?.url?.includes('/admin');
+        
+        if (isAdminRequest) {
+          // Admin authentication failed
+          localStorage.removeItem('admin_token');
+          window.location.href = '/admin-login';
+        } else {
+          // Regular user authentication failed
+          localStorage.removeItem('token');
+          window.location.href = '/login';
+        }
       }
     }
     

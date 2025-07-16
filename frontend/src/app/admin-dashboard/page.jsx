@@ -53,6 +53,8 @@ export default function AdminDashboard() {
   const [tab, setTab] = useState('dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   
   // Data states
   const [users, setUsers] = useState([]);
@@ -91,8 +93,39 @@ export default function AdminDashboard() {
     recentTransactions: 0
   });
 
+  // Check authentication on component mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const adminToken = localStorage.getItem('admin_token');
+        if (!adminToken) {
+          router.push('/admin-login');
+          return;
+        }
+
+        // Test token validity by making a request to admin stats
+        const response = await axiosClient.get('/admin/stats');
+        if (response.status === 200) {
+          setIsAuthenticated(true);
+        } else {
+          throw new Error('Invalid token');
+        }
+      } catch (error) {
+        console.error('Authentication check failed:', error);
+        localStorage.removeItem('admin_token');
+        router.push('/admin-login');
+      } finally {
+        setIsCheckingAuth(false);
+      }
+    };
+
+    checkAuth();
+  }, [router]);
+
   // Fetch dashboard data
   useEffect(() => {
+    if (!isAuthenticated) return;
+    
     if (tab === 'dashboard') {
       fetchDashboardStats();
     } else if (tab === 'users') {
@@ -104,7 +137,7 @@ export default function AdminDashboard() {
     } else if (tab === 'discounts') {
       fetchDiscounts();
     }
-  }, [tab]);
+  }, [tab, isAuthenticated]);
 
   const fetchDashboardStats = async () => {
     try {
@@ -330,7 +363,7 @@ export default function AdminDashboard() {
 
   // Logout function
   const logout = () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem('admin_token');
     router.push('/admin-login');
   };
 
@@ -343,6 +376,23 @@ export default function AdminDashboard() {
     { id: 'discounts', label: 'Discounts', icon: FaPercent },
     { id: 'settings', label: 'Settings', icon: FaCog }
   ];
+
+  // Show loading screen while checking authentication
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated (will redirect)
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen flex bg-gray-50">

@@ -1,5 +1,5 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { axiosClient } from '@/utils/AxiosClient';
 import { toast } from 'react-toastify';
@@ -8,6 +8,14 @@ export default function AdminLoginPage() {
   const router = useRouter();
   const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
+
+  // Check if already logged in on component mount
+  useEffect(() => {
+    const adminToken = localStorage.getItem('admin_token');
+    if (adminToken) {
+      router.push('/admin-dashboard');
+    }
+  }, [router]);
 
   const onChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
