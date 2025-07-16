@@ -6,20 +6,38 @@ const AdminAuthMiddleware = require('../../middleware/AdminAuth');
 // Admin login
 router.post('/login', AdminController.loginAdmin);
 
-// user management
-router.post('/user/:id/activation',AdminAuthMiddleware,AdminController.toggleUserActivation);
-router.post('/user/:id/update-profile',AdminAuthMiddleware,AdminController.updateUserProfile);
+// Enhanced user management
+router.get('/users', AdminAuthMiddleware, AdminController.listUsers);
+router.get('/users/:id', AdminAuthMiddleware, AdminController.getUserDetails);
+router.get('/users/:id/transactions', AdminAuthMiddleware, AdminController.getUserTransactions);
+router.get('/users/:id/kyc', AdminAuthMiddleware, AdminController.getUserKYC);
+router.get('/users/:id/activity', AdminAuthMiddleware, AdminController.getUserActivity);
+router.post('/users/:id/block', AdminAuthMiddleware, AdminController.blockUser);
+router.post('/users/:id/unblock', AdminAuthMiddleware, AdminController.unblockUser);
+router.post('/users/:id/reset-password', AdminAuthMiddleware, AdminController.resetUserPassword);
 
-// list users
-router.get('/users',AdminAuthMiddleware,AdminController.listUsers);
+// Bulk user actions
+router.post('/users/bulk/block', AdminAuthMiddleware, AdminController.bulkBlockUsers);
+router.post('/users/bulk/unblock', AdminAuthMiddleware, AdminController.bulkUnblockUsers);
+
+// KYC management
+router.get('/kyc/pending', AdminAuthMiddleware, AdminController.getPendingKYC);
+router.post('/kyc/:id/approve', AdminAuthMiddleware, AdminController.approveKYC);
+router.post('/kyc/:id/reject', AdminAuthMiddleware, AdminController.rejectKYC);
 
 // Transactions
-router.get('/transactions',AdminAuthMiddleware,AdminController.listTransactions);
-router.post('/transactions/:id/refund',AdminAuthMiddleware,AdminController.refundTransaction);
+router.get('/transactions', AdminAuthMiddleware, AdminController.listTransactions);
+router.post('/transactions/:id/refund', AdminAuthMiddleware, AdminController.refundTransaction);
 
-// Example protected route (placeholder for dashboard APIs)
-router.get('/stats', AdminAuthMiddleware, (req, res)=>{
-    res.send({msg:'Protected admin stats endpoint', userCount:0});
-});
+// Email notifications
+router.post('/send-email', AdminAuthMiddleware, AdminController.sendEmail);
+
+// Discounts
+router.get('/discounts', AdminAuthMiddleware, AdminController.getDiscounts);
+router.post('/discounts', AdminAuthMiddleware, AdminController.addDiscount);
+router.delete('/discounts/:id', AdminAuthMiddleware, AdminController.deleteDiscount);
+
+// Enhanced stats
+router.get('/stats', AdminAuthMiddleware, AdminController.getStats);
 
 module.exports = router;

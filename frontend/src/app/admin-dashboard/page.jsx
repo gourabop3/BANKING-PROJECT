@@ -17,16 +17,54 @@ import {
   FaChevronLeft,
   FaChevronRight,
   FaBars,
-  FaTimes
+  FaTimes,
+  FaEye,
+  FaEdit,
+  FaTrash,
+  FaEnvelope,
+  FaDownload,
+  FaFilter,
+  FaSort,
+  FaUserPlus,
+  FaUserMinus,
+  FaUserShield,
+  FaCheckCircle,
+  FaTimesCircle,
+  FaHistory,
+  FaFileAlt,
+  FaSend,
+  FaArrowLeft,
+  FaArrowRight,
+  FaCalendarAlt,
+  FaMapMarkerAlt,
+  FaPhone,
+  FaEnvelopeOpen,
+  FaUserTie,
+  FaUnlock,
+  FaLock
 } from 'react-icons/fa';
-import { MdDashboard, MdNotifications, MdSettings } from 'react-icons/md';
+import { MdDashboard, MdNotifications, MdSettings, MdEmail, MdClose } from 'react-icons/md';
 import { axiosClient } from '@/utils/AxiosClient';
+import { toast } from 'react-toastify';
 
 export default function AdminDashboard() {
   const router = useRouter();
   const [tab, setTab] = useState('dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
+  // User Detail Modal States
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [userDetailTab, setUserDetailTab] = useState('profile');
+  const [userDetailLoading, setUserDetailLoading] = useState(false);
+  
+  // Email Modal States
+  const [emailModalOpen, setEmailModalOpen] = useState(false);
+  const [emailRecipient, setEmailRecipient] = useState(null);
+  const [emailSubject, setEmailSubject] = useState('');
+  const [emailMessage, setEmailMessage] = useState('');
+  const [emailTemplate, setEmailTemplate] = useState('');
+  const [emailSending, setEmailSending] = useState(false);
   
   // Data states
   const [users, setUsers] = useState([]);
@@ -45,12 +83,22 @@ export default function AdminDashboard() {
   const [discountType, setDiscountType] = useState('percent');
   const [addingDiscount, setAddingDiscount] = useState(false);
   
+  // Individual user data
+  const [userTransactions, setUserTransactions] = useState([]);
+  const [userKyc, setUserKyc] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
+  const [userActivity, setUserActivity] = useState([]);
+  
   // Dashboard stats
   const [stats, setStats] = useState({
     totalUsers: 0,
     pendingKYC: 0,
     totalTransactions: 0,
-    totalAmount: 0
+    totalAmount: 0,
+    activeUsers: 0,
+    blockedUsers: 0,
+    verifiedUsers: 0,
+    todayTransactions: 0
   });
 
   // User management
@@ -58,11 +106,37 @@ export default function AdminDashboard() {
   const [userFilter, setUserFilter] = useState('all');
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [userSort, setUserSort] = useState('name');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
   // Transaction management
   const [txnSearch, setTxnSearch] = useState('');
   const [txnFilter, setTxnFilter] = useState('all');
   const [txnSort, setTxnSort] = useState('date');
+
+  // Email templates
+  const emailTemplates = {
+    welcome: {
+      subject: 'Welcome to CBI Banking',
+      message: 'Dear {name},\n\nWelcome to CBI Banking! Your account has been successfully created.\n\nBest regards,\nCBI Banking Team'
+    },
+    kyc_approved: {
+      subject: 'KYC Verification Approved',
+      message: 'Dear {name},\n\nYour KYC verification has been approved. You can now access all banking services.\n\nBest regards,\nCBI Banking Team'
+    },
+    kyc_rejected: {
+      subject: 'KYC Verification Rejected',
+      message: 'Dear {name},\n\nYour KYC verification has been rejected. Please resubmit your documents.\n\nBest regards,\nCBI Banking Team'
+    },
+    account_blocked: {
+      subject: 'Account Temporarily Blocked',
+      message: 'Dear {name},\n\nYour account has been temporarily blocked for security reasons. Please contact support.\n\nBest regards,\nCBI Banking Team'
+    },
+    custom: {
+      subject: '',
+      message: ''
+    }
+  };
 
   // Check auth on mount
   useEffect(() => {
@@ -76,6 +150,7 @@ export default function AdminDashboard() {
     fetchKYC();
     fetchTransactions();
     fetchDiscounts();
+    fetchStats();
   }, []);
 
   // Fetch functions
@@ -85,10 +160,11 @@ export default function AdminDashboard() {
       const response = await axiosClient.get('/admin/users', {
         headers: { Authorization: 'Bearer ' + localStorage.getItem('admin_token') }
       });
-      setUsers(response.data);
-      setStats(prev => ({ ...prev, totalUsers: response.data.length }));
+      setUsers(response.data.users || response.data || []);
+      setStats(prev => ({ ...prev, totalUsers: (response.data.users || response.data || []).length }));
     } catch (error) {
       setUsersError('Failed to fetch users');
+      toast.error('Failed to fetch users');
     } finally {
       setUsersLoading(false);
     }
@@ -100,10 +176,11 @@ export default function AdminDashboard() {
       const response = await axiosClient.get('/admin/kyc/pending', {
         headers: { Authorization: 'Bearer ' + localStorage.getItem('admin_token') }
       });
-      setKycPending(response.data);
-      setStats(prev => ({ ...prev, pendingKYC: response.data.length }));
+      setKycPending(response.data || []);
+      setStats(prev => ({ ...prev, pendingKYC: (response.data || []).length }));
     } catch (error) {
       setKycError('Failed to fetch KYC data');
+      toast.error('Failed to fetch KYC data');
     } finally {
       setKycLoading(false);
     }
@@ -115,14 +192,15 @@ export default function AdminDashboard() {
       const response = await axiosClient.get('/admin/transactions', {
         headers: { Authorization: 'Bearer ' + localStorage.getItem('admin_token') }
       });
-      setTransactions(response.data);
+      setTransactions(response.data || []);
       setStats(prev => ({ 
         ...prev, 
-        totalTransactions: response.data.length,
-        totalAmount: response.data.reduce((sum, txn) => sum + txn.amount, 0)
+        totalTransactions: (response.data || []).length,
+        totalAmount: (response.data || []).reduce((sum, txn) => sum + (txn.amount || 0), 0)
       }));
     } catch (error) {
       setTxnError('Failed to fetch transactions');
+      toast.error('Failed to fetch transactions');
     } finally {
       setTxnLoading(false);
     }
@@ -134,11 +212,53 @@ export default function AdminDashboard() {
       const response = await axiosClient.get('/admin/discounts', {
         headers: { Authorization: 'Bearer ' + localStorage.getItem('admin_token') }
       });
-      setDiscounts(response.data);
+      setDiscounts(response.data.discounts || response.data || []);
     } catch (error) {
       setDiscountError('Failed to fetch discounts');
+      toast.error('Failed to fetch discounts');
     } finally {
       setDiscountLoading(false);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const response = await axiosClient.get('/admin/stats', {
+        headers: { Authorization: 'Bearer ' + localStorage.getItem('admin_token') }
+      });
+      setStats(prev => ({ ...prev, ...response.data }));
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    }
+  };
+
+  // Fetch individual user data
+  const fetchUserDetails = async (userId) => {
+    setUserDetailLoading(true);
+    try {
+      const [profileRes, transactionsRes, kycRes, activityRes] = await Promise.all([
+        axiosClient.get(`/admin/users/${userId}`, {
+          headers: { Authorization: 'Bearer ' + localStorage.getItem('admin_token') }
+        }),
+        axiosClient.get(`/admin/users/${userId}/transactions`, {
+          headers: { Authorization: 'Bearer ' + localStorage.getItem('admin_token') }
+        }),
+        axiosClient.get(`/admin/users/${userId}/kyc`, {
+          headers: { Authorization: 'Bearer ' + localStorage.getItem('admin_token') }
+        }),
+        axiosClient.get(`/admin/users/${userId}/activity`, {
+          headers: { Authorization: 'Bearer ' + localStorage.getItem('admin_token') }
+        })
+      ]);
+      
+      setUserProfile(profileRes.data);
+      setUserTransactions(transactionsRes.data || []);
+      setUserKyc(kycRes.data);
+      setUserActivity(activityRes.data || []);
+    } catch (error) {
+      toast.error('Failed to fetch user details');
+    } finally {
+      setUserDetailLoading(false);
     }
   };
 
@@ -154,8 +274,14 @@ export default function AdminDashboard() {
         headers: { Authorization: 'Bearer ' + localStorage.getItem('admin_token') }
       });
       fetchUsers();
+      toast.success(`User ${action} successfully`);
+      
+      // Update selected user if currently viewing
+      if (selectedUser && selectedUser._id === userId) {
+        fetchUserDetails(userId);
+      }
     } catch (error) {
-      console.error('Failed to perform user action:', error);
+      toast.error(`Failed to ${action} user`);
     }
   };
 
@@ -165,8 +291,10 @@ export default function AdminDashboard() {
         headers: { Authorization: 'Bearer ' + localStorage.getItem('admin_token') }
       });
       fetchKYC();
+      fetchUsers();
+      toast.success(`KYC ${action} successfully`);
     } catch (error) {
-      console.error('Failed to perform KYC action:', error);
+      toast.error(`Failed to ${action} KYC`);
     }
   };
 
@@ -183,16 +311,153 @@ export default function AdminDashboard() {
       });
       
       setDiscountValue('');
-      const res = await axiosClient.get('/admin/discounts', {
-        headers: { Authorization: 'Bearer ' + localStorage.getItem('admin_token') }
-      });
-      setDiscounts(res.data);
+      fetchDiscounts();
+      toast.success('Discount added successfully');
     } catch (error) {
-      console.error('Failed to add discount:', error);
+      toast.error('Failed to add discount');
     } finally {
       setAddingDiscount(false);
     }
   };
+
+  // User detail modal handlers
+  const openUserDetail = (user) => {
+    setSelectedUser(user);
+    setUserDetailTab('profile');
+    fetchUserDetails(user._id || user.id);
+  };
+
+  const closeUserDetail = () => {
+    setSelectedUser(null);
+    setUserProfile(null);
+    setUserTransactions([]);
+    setUserKyc(null);
+    setUserActivity([]);
+  };
+
+  // Email handlers
+  const openEmailModal = (user = null) => {
+    setEmailRecipient(user);
+    setEmailModalOpen(true);
+    setEmailSubject('');
+    setEmailMessage('');
+    setEmailTemplate('custom');
+  };
+
+  const closeEmailModal = () => {
+    setEmailModalOpen(false);
+    setEmailRecipient(null);
+    setEmailSubject('');
+    setEmailMessage('');
+    setEmailTemplate('custom');
+  };
+
+  const handleEmailTemplateChange = (template) => {
+    setEmailTemplate(template);
+    if (template !== 'custom') {
+      setEmailSubject(emailTemplates[template].subject);
+      setEmailMessage(emailTemplates[template].message);
+    }
+  };
+
+  const sendEmail = async () => {
+    if (!emailSubject || !emailMessage) {
+      toast.error('Please fill in subject and message');
+      return;
+    }
+
+    setEmailSending(true);
+    try {
+      const recipientData = emailRecipient ? [emailRecipient] : selectedUsers.map(id => users.find(u => u._id === id));
+      
+      await axiosClient.post('/admin/send-email', {
+        recipients: recipientData,
+        subject: emailSubject,
+        message: emailMessage,
+        template: emailTemplate
+      }, {
+        headers: { Authorization: 'Bearer ' + localStorage.getItem('admin_token') }
+      });
+      
+      toast.success('Email sent successfully');
+      closeEmailModal();
+    } catch (error) {
+      toast.error('Failed to send email');
+    } finally {
+      setEmailSending(false);
+    }
+  };
+
+  // Bulk actions
+  const handleBulkAction = async (action) => {
+    if (selectedUsers.length === 0) {
+      toast.error('Please select users first');
+      return;
+    }
+
+    try {
+      await axiosClient.post(`/admin/users/bulk/${action}`, {
+        userIds: selectedUsers
+      }, {
+        headers: { Authorization: 'Bearer ' + localStorage.getItem('admin_token') }
+      });
+      
+      fetchUsers();
+      setSelectedUsers([]);
+      toast.success(`Bulk ${action} completed successfully`);
+    } catch (error) {
+      toast.error(`Failed to perform bulk ${action}`);
+    }
+  };
+
+  // Utility functions
+  const toggleUserSelection = (userId) => {
+    setSelectedUsers(prev => 
+      prev.includes(userId) 
+        ? prev.filter(id => id !== userId)
+        : [...prev, userId]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedUsers.length === users.length) {
+      setSelectedUsers([]);
+    } else {
+      setSelectedUsers(users.map(user => user._id || user.id));
+    }
+  };
+
+  // Filter and sort functions
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = user.name?.toLowerCase().includes(userSearch.toLowerCase()) || 
+                         user.email?.toLowerCase().includes(userSearch.toLowerCase());
+    const matchesFilter = userFilter === 'all' || 
+                         (userFilter === 'active' && user.isActive) ||
+                         (userFilter === 'blocked' && !user.isActive) ||
+                         (userFilter === 'verified' && user.kyc_status === 'verified') ||
+                         (userFilter === 'pending' && user.kyc_status === 'pending');
+    return matchesSearch && matchesFilter;
+  });
+
+  const sortedUsers = [...filteredUsers].sort((a, b) => {
+    switch (userSort) {
+      case 'name':
+        return (a.name || '').localeCompare(b.name || '');
+      case 'email':
+        return (a.email || '').localeCompare(b.email || '');
+      case 'date':
+        return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+      default:
+        return 0;
+    }
+  });
+
+  // Pagination
+  const totalPages = Math.ceil(sortedUsers.length / itemsPerPage);
+  const currentUsers = sortedUsers.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   // Close mobile menu when tab changes
   useEffect(() => {
@@ -212,10 +477,14 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen flex bg-gray-100">
       {/* Mobile Overlay */}
-      {mobileMenuOpen && (
+      {(mobileMenuOpen || selectedUser || emailModalOpen) && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={() => setMobileMenuOpen(false)}
+          onClick={() => {
+            setMobileMenuOpen(false);
+            if (selectedUser) closeUserDetail();
+            if (emailModalOpen) closeEmailModal();
+          }}
         />
       )}
 
@@ -329,6 +598,13 @@ export default function AdminDashboard() {
               </div>
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4">
+              <button 
+                onClick={() => openEmailModal()}
+                className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full"
+                title="Send Bulk Email"
+              >
+                <FaEnvelope className="text-lg" />
+              </button>
               <button className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full">
                 <FaBell className="text-lg" />
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">3</span>
@@ -346,7 +622,7 @@ export default function AdminDashboard() {
           {/* Dashboard Tab */}
           {tab === 'dashboard' && (
             <div className="space-y-6">
-              {/* Stats Cards */}
+              {/* Enhanced Stats Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                 <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-lg p-4 sm:p-6 text-white">
                   <div className="flex items-center">
@@ -398,77 +674,139 @@ export default function AdminDashboard() {
               </div>
 
               {/* Quick Actions */}
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <button 
-                    onClick={() => setTab('users')}
-                    className="p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:shadow-md transition-all"
-                  >
-                    <FaUsers className="text-2xl text-blue-500 mb-2" />
-                    <p className="font-medium">Manage Users</p>
-                    <p className="text-sm text-gray-600">View and manage user accounts</p>
-                  </button>
-                  
-                  <button 
-                    onClick={() => setTab('kyc')}
-                    className="p-4 border border-gray-200 rounded-lg hover:border-green-500 hover:shadow-md transition-all"
-                  >
-                    <FaIdCard className="text-2xl text-green-500 mb-2" />
-                    <p className="font-medium">KYC Approvals</p>
-                    <p className="text-sm text-gray-600">Review pending verifications</p>
-                  </button>
-                  
-                  <button 
-                    onClick={() => setTab('transactions')}
-                    className="p-4 border border-gray-200 rounded-lg hover:border-purple-500 hover:shadow-md transition-all"
-                  >
-                    <FaMoneyBill className="text-2xl text-purple-500 mb-2" />
-                    <p className="font-medium">View Transactions</p>
-                    <p className="text-sm text-gray-600">Monitor all transactions</p>
-                  </button>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <button
+                      onClick={() => setTab('users')}
+                      className="flex items-center justify-center p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                    >
+                      <FaUsers className="text-blue-600 text-xl mr-2" />
+                      <span className="text-blue-600 font-medium">Manage Users</span>
+                    </button>
+                    <button
+                      onClick={() => setTab('kyc')}
+                      className="flex items-center justify-center p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
+                    >
+                      <FaIdCard className="text-green-600 text-xl mr-2" />
+                      <span className="text-green-600 font-medium">KYC Review</span>
+                    </button>
+                    <button
+                      onClick={() => openEmailModal()}
+                      className="flex items-center justify-center p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors"
+                    >
+                      <FaEnvelope className="text-purple-600 text-xl mr-2" />
+                      <span className="text-purple-600 font-medium">Send Email</span>
+                    </button>
+                    <button
+                      onClick={() => setTab('transactions')}
+                      className="flex items-center justify-center p-4 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors"
+                    >
+                      <FaMoneyBill className="text-orange-600 text-xl mr-2" />
+                      <span className="text-orange-600 font-medium">View Transactions</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
+                  <div className="space-y-3">
+                    {users.slice(0, 5).map((user, index) => (
+                      <div key={index} className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                          <FaUser className="text-blue-600 text-sm" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {user.name || 'User'} joined
+                          </p>
+                          <p className="text-xs text-gray-500 truncate">
+                            {user.email || 'email@example.com'}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => openUserDetail(user)}
+                          className="text-blue-600 hover:text-blue-800 text-sm"
+                        >
+                          View
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Users Tab */}
+          {/* Enhanced Users Tab */}
           {tab === 'users' && (
             <div className="space-y-6">
-              {/* Search and Filter */}
-              <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
-                <div className="flex-1">
-                  <div className="relative">
-                    <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Search users..."
-                      value={userSearch}
-                      onChange={(e) => setUserSearch(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
+              {/* Search, Filter, and Bulk Actions */}
+              <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
+                <div className="flex flex-col lg:flex-row gap-4 mb-4">
+                  <div className="flex-1">
+                    <div className="relative">
+                      <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="Search users..."
+                        value={userSearch}
+                        onChange={(e) => setUserSearch(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <select
+                      value={userFilter}
+                      onChange={(e) => setUserFilter(e.target.value)}
+                      className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="all">All Users</option>
+                      <option value="active">Active</option>
+                      <option value="blocked">Blocked</option>
+                      <option value="verified">Verified</option>
+                      <option value="pending">Pending KYC</option>
+                    </select>
+                    <select
+                      value={userSort}
+                      onChange={(e) => setUserSort(e.target.value)}
+                      className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="name">Sort by Name</option>
+                      <option value="email">Sort by Email</option>
+                      <option value="date">Sort by Date</option>
+                    </select>
                   </div>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <select
-                    value={userFilter}
-                    onChange={(e) => setUserFilter(e.target.value)}
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="all">All Users</option>
-                    <option value="active">Active</option>
-                    <option value="blocked">Blocked</option>
-                  </select>
-                  <select
-                    value={userSort}
-                    onChange={(e) => setUserSort(e.target.value)}
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="name">Sort by Name</option>
-                    <option value="email">Sort by Email</option>
-                    <option value="date">Sort by Date</option>
-                  </select>
-                </div>
+
+                {/* Bulk Actions */}
+                {selectedUsers.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-4 p-3 bg-blue-50 rounded-lg">
+                    <span className="text-sm text-gray-700">
+                      {selectedUsers.length} users selected
+                    </span>
+                    <button
+                      onClick={() => handleBulkAction('block')}
+                      className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
+                    >
+                      Block All
+                    </button>
+                    <button
+                      onClick={() => handleBulkAction('unblock')}
+                      className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+                    >
+                      Unblock All
+                    </button>
+                    <button
+                      onClick={() => openEmailModal()}
+                      className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                    >
+                      Send Email
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Users Table */}
@@ -477,6 +815,14 @@ export default function AdminDashboard() {
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
+                        <th className="px-4 sm:px-6 py-3 text-left">
+                          <input
+                            type="checkbox"
+                            checked={selectedUsers.length === users.length && users.length > 0}
+                            onChange={toggleSelectAll}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                        </th>
                         <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           User
                         </th>
@@ -492,8 +838,16 @@ export default function AdminDashboard() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {users.map((user, index) => (
-                        <tr key={index} className="hover:bg-gray-50">
+                      {currentUsers.map((user, index) => (
+                        <tr key={user._id || index} className="hover:bg-gray-50">
+                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                            <input
+                              type="checkbox"
+                              checked={selectedUsers.includes(user._id || user.id)}
+                              onChange={() => toggleUserSelection(user._id || user.id)}
+                              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            />
+                          </td>
                           <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
                               <div className="flex-shrink-0 h-10 w-10">
@@ -513,40 +867,117 @@ export default function AdminDashboard() {
                           </td>
                           <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                             <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                              user.status === 'active' 
+                              user.isActive !== false
                                 ? 'bg-green-100 text-green-800' 
                                 : 'bg-red-100 text-red-800'
                             }`}>
-                              {user.status || 'Active'}
+                              {user.isActive !== false ? 'Active' : 'Blocked'}
                             </span>
                           </td>
                           <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                             <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                              user.kyc === 'verified' 
+                              user.kyc_status === 'verified' 
                                 ? 'bg-green-100 text-green-800' 
                                 : 'bg-yellow-100 text-yellow-800'
                             }`}>
-                              {user.kyc || 'Pending'}
+                              {user.kyc_status || 'Pending'}
                             </span>
                           </td>
-                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                            <button
-                              onClick={() => handleUserAction(user.id, 'block')}
-                              className="text-red-600 hover:text-red-900"
-                            >
-                              Block
-                            </button>
-                            <button
-                              onClick={() => handleUserAction(user.id, 'unblock')}
-                              className="text-green-600 hover:text-green-900"
-                            >
-                              Unblock
-                            </button>
+                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div className="flex items-center space-x-2">
+                              <button
+                                onClick={() => openUserDetail(user)}
+                                className="text-blue-600 hover:text-blue-900"
+                                title="View Details"
+                              >
+                                <FaEye />
+                              </button>
+                              <button
+                                onClick={() => openEmailModal(user)}
+                                className="text-green-600 hover:text-green-900"
+                                title="Send Email"
+                              >
+                                <FaEnvelope />
+                              </button>
+                              <button
+                                onClick={() => handleUserAction(user._id, user.isActive !== false ? 'block' : 'unblock')}
+                                className={`${user.isActive !== false ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'}`}
+                                title={user.isActive !== false ? 'Block User' : 'Unblock User'}
+                              >
+                                {user.isActive !== false ? <FaLock /> : <FaUnlock />}
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
+                </div>
+
+                {/* Pagination */}
+                <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+                  <div className="flex-1 flex justify-between sm:hidden">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                      className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                    >
+                      Previous
+                    </button>
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      disabled={currentPage === totalPages}
+                      className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                    >
+                      Next
+                    </button>
+                  </div>
+                  <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm text-gray-700">
+                        Showing{' '}
+                        <span className="font-medium">{((currentPage - 1) * itemsPerPage) + 1}</span>
+                        {' '}to{' '}
+                        <span className="font-medium">
+                          {Math.min(currentPage * itemsPerPage, sortedUsers.length)}
+                        </span>
+                        {' '}of{' '}
+                        <span className="font-medium">{sortedUsers.length}</span>
+                        {' '}results
+                      </p>
+                    </div>
+                    <div>
+                      <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                        <button
+                          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                          disabled={currentPage === 1}
+                          className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+                        >
+                          <FaArrowLeft className="h-3 w-3" />
+                        </button>
+                        {Array.from({ length: totalPages }, (_, i) => (
+                          <button
+                            key={i + 1}
+                            onClick={() => setCurrentPage(i + 1)}
+                            className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                              currentPage === i + 1
+                                ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                                : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                            }`}
+                          >
+                            {i + 1}
+                          </button>
+                        ))}
+                        <button
+                          onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                          disabled={currentPage === totalPages}
+                          className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+                        >
+                          <FaArrowRight className="h-3 w-3" />
+                        </button>
+                      </nav>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -588,7 +1019,7 @@ export default function AdminDashboard() {
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
                         {kycPending.map((kyc, index) => (
-                          <tr key={index} className="hover:bg-gray-50">
+                          <tr key={kyc._id || index} className="hover:bg-gray-50">
                             <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center">
                                 <div className="flex-shrink-0 h-10 w-10">
@@ -631,19 +1062,30 @@ export default function AdminDashboard() {
                                 Pending
                               </span>
                             </td>
-                            <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                              <button
-                                onClick={() => handleKYCAction(kyc.id, 'approve')}
-                                className="text-green-600 hover:text-green-900"
-                              >
-                                Approve
-                              </button>
-                              <button
-                                onClick={() => handleKYCAction(kyc.id, 'reject')}
-                                className="text-red-600 hover:text-red-900"
-                              >
-                                Reject
-                              </button>
+                            <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
+                              <div className="flex items-center space-x-2">
+                                <button
+                                  onClick={() => handleKYCAction(kyc._id, 'approve')}
+                                  className="text-green-600 hover:text-green-900"
+                                  title="Approve"
+                                >
+                                  <FaCheckCircle />
+                                </button>
+                                <button
+                                  onClick={() => handleKYCAction(kyc._id, 'reject')}
+                                  className="text-red-600 hover:text-red-900"
+                                  title="Reject"
+                                >
+                                  <FaTimesCircle />
+                                </button>
+                                <button
+                                  onClick={() => openUserDetail(kyc.user)}
+                                  className="text-blue-600 hover:text-blue-900"
+                                  title="View User"
+                                >
+                                  <FaEye />
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -718,13 +1160,16 @@ export default function AdminDashboard() {
                         <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Status
                         </th>
+                        <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Actions
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {transactions.map((txn, index) => (
-                        <tr key={index} className="hover:bg-gray-50">
+                        <tr key={txn._id || index} className="hover:bg-gray-50">
                           <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {txn.id || `TXN${index + 1}`}
+                            {txn._id || `TXN${index + 1}`}
                           </td>
                           <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                             <div className="text-sm text-gray-900">{txn.user?.name || 'User'}</div>
@@ -753,6 +1198,15 @@ export default function AdminDashboard() {
                             }`}>
                               {txn.status || 'Completed'}
                             </span>
+                          </td>
+                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button
+                              onClick={() => txn.user && openUserDetail(txn.user)}
+                              className="text-blue-600 hover:text-blue-900"
+                              title="View User"
+                            >
+                              <FaEye />
+                            </button>
                           </td>
                         </tr>
                       ))}
@@ -812,7 +1266,7 @@ export default function AdminDashboard() {
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {discounts.map((discount, index) => (
-                      <div key={index} className="border border-gray-200 rounded-lg p-4">
+                      <div key={discount._id || index} className="border border-gray-200 rounded-lg p-4">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-2xl font-bold text-blue-600">
                             {discount.type === 'percent' ? `${discount.value}%` : `₹${discount.value}`}
@@ -915,6 +1369,357 @@ export default function AdminDashboard() {
           )}
         </div>
       </main>
+
+      {/* User Detail Modal */}
+      {selectedUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">User Details</h2>
+                <p className="text-sm text-gray-500">{selectedUser.name || 'User'}</p>
+              </div>
+              <button
+                onClick={closeUserDetail}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <FaTimes className="text-xl" />
+              </button>
+            </div>
+
+            {/* Modal Tabs */}
+            <div className="border-b border-gray-200">
+              <nav className="flex space-x-8 px-6">
+                {['profile', 'transactions', 'kyc', 'activity'].map((tabName) => (
+                  <button
+                    key={tabName}
+                    onClick={() => setUserDetailTab(tabName)}
+                    className={`py-3 px-1 border-b-2 font-medium text-sm capitalize ${
+                      userDetailTab === tabName
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    {tabName}
+                  </button>
+                ))}
+              </nav>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 overflow-y-auto max-h-[60vh]">
+              {userDetailLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  <span className="ml-2 text-gray-600">Loading...</span>
+                </div>
+              ) : (
+                <>
+                  {/* Profile Tab */}
+                  {userDetailTab === 'profile' && (
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <h3 className="text-lg font-medium text-gray-900 mb-4">Personal Information</h3>
+                          <div className="space-y-3">
+                            <div>
+                              <label className="text-sm font-medium text-gray-500">Full Name</label>
+                              <p className="text-sm text-gray-900">{selectedUser.name || 'Not provided'}</p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-gray-500">Email</label>
+                              <p className="text-sm text-gray-900">{selectedUser.email || 'Not provided'}</p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-gray-500">Phone</label>
+                              <p className="text-sm text-gray-900">{selectedUser.phone || 'Not provided'}</p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-gray-500">Join Date</label>
+                              <p className="text-sm text-gray-900">
+                                {selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString() : 'Not available'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-medium text-gray-900 mb-4">Account Status</h3>
+                          <div className="space-y-3">
+                            <div>
+                              <label className="text-sm font-medium text-gray-500">Account Status</label>
+                              <p className={`text-sm font-medium ${
+                                selectedUser.isActive !== false ? 'text-green-600' : 'text-red-600'
+                              }`}>
+                                {selectedUser.isActive !== false ? 'Active' : 'Blocked'}
+                              </p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-gray-500">KYC Status</label>
+                              <p className={`text-sm font-medium ${
+                                selectedUser.kyc_status === 'verified' ? 'text-green-600' : 'text-yellow-600'
+                              }`}>
+                                {selectedUser.kyc_status || 'Pending'}
+                              </p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-gray-500">Last Login</label>
+                              <p className="text-sm text-gray-900">
+                                {selectedUser.lastLogin ? new Date(selectedUser.lastLogin).toLocaleDateString() : 'Never'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Action Buttons */}
+                      <div className="flex flex-wrap gap-2 pt-4 border-t border-gray-200">
+                        <button
+                          onClick={() => handleUserAction(selectedUser._id, selectedUser.isActive !== false ? 'block' : 'unblock')}
+                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            selectedUser.isActive !== false
+                              ? 'bg-red-600 text-white hover:bg-red-700'
+                              : 'bg-green-600 text-white hover:bg-green-700'
+                          }`}
+                        >
+                          {selectedUser.isActive !== false ? 'Block User' : 'Unblock User'}
+                        </button>
+                        <button
+                          onClick={() => openEmailModal(selectedUser)}
+                          className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                        >
+                          Send Email
+                        </button>
+                        <button
+                          onClick={() => handleUserAction(selectedUser._id, 'reset-password')}
+                          className="px-4 py-2 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700 transition-colors"
+                        >
+                          Reset Password
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Transactions Tab */}
+                  {userDetailTab === 'transactions' && (
+                    <div>
+                      <h3 className="text-lg font-medium text-gray-900 mb-4">User Transactions</h3>
+                      {userTransactions.length === 0 ? (
+                        <div className="text-center py-8">
+                          <FaMoneyBill className="mx-auto h-12 w-12 text-gray-400" />
+                          <p className="mt-4 text-gray-600">No transactions found</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {userTransactions.map((txn, index) => (
+                            <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                              <div>
+                                <p className="text-sm font-medium text-gray-900">{txn.type || 'Transaction'}</p>
+                                <p className="text-xs text-gray-500">{txn.date || 'Today'}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-sm font-medium text-gray-900">₹{txn.amount?.toLocaleString() || '0'}</p>
+                                <p className={`text-xs ${
+                                  txn.status === 'completed' ? 'text-green-600' : 'text-yellow-600'
+                                }`}>
+                                  {txn.status || 'Completed'}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* KYC Tab */}
+                  {userDetailTab === 'kyc' && (
+                    <div>
+                      <h3 className="text-lg font-medium text-gray-900 mb-4">KYC Information</h3>
+                      {userKyc ? (
+                        <div className="space-y-4">
+                          <div>
+                            <label className="text-sm font-medium text-gray-500">Status</label>
+                            <p className={`text-sm font-medium ${
+                              userKyc.status === 'verified' ? 'text-green-600' : 'text-yellow-600'
+                            }`}>
+                              {userKyc.status || 'Pending'}
+                            </p>
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-gray-500">Documents</label>
+                            <div className="mt-2 space-x-2">
+                              {userKyc.documents?.aadhaar && (
+                                <a
+                                  href={userKyc.documents.aadhaar}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:text-blue-800 text-sm"
+                                >
+                                  View Aadhaar
+                                </a>
+                              )}
+                              {userKyc.documents?.pan && (
+                                <a
+                                  href={userKyc.documents.pan}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:text-blue-800 text-sm"
+                                >
+                                  View PAN
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center py-8">
+                          <FaIdCard className="mx-auto h-12 w-12 text-gray-400" />
+                          <p className="mt-4 text-gray-600">No KYC information available</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Activity Tab */}
+                  {userDetailTab === 'activity' && (
+                    <div>
+                      <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Activity</h3>
+                      {userActivity.length === 0 ? (
+                        <div className="text-center py-8">
+                          <FaHistory className="mx-auto h-12 w-12 text-gray-400" />
+                          <p className="mt-4 text-gray-600">No activity found</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {userActivity.map((activity, index) => (
+                            <div key={index} className="flex items-center p-3 bg-gray-50 rounded-lg">
+                              <div className="flex-shrink-0">
+                                <FaHistory className="text-gray-400" />
+                              </div>
+                              <div className="ml-3">
+                                <p className="text-sm font-medium text-gray-900">{activity.action || 'Activity'}</p>
+                                <p className="text-xs text-gray-500">{activity.date || 'Today'}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Email Modal */}
+      {emailModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Send Email</h2>
+                <p className="text-sm text-gray-500">
+                  {emailRecipient 
+                    ? `To: ${emailRecipient.name || emailRecipient.email}`
+                    : `To: ${selectedUsers.length} selected users`
+                  }
+                </p>
+              </div>
+              <button
+                onClick={closeEmailModal}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <FaTimes className="text-xl" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 overflow-y-auto max-h-[60vh]">
+              <div className="space-y-4">
+                {/* Template Selection */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Email Template
+                  </label>
+                  <select
+                    value={emailTemplate}
+                    onChange={(e) => handleEmailTemplateChange(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="custom">Custom Email</option>
+                    <option value="welcome">Welcome Email</option>
+                    <option value="kyc_approved">KYC Approved</option>
+                    <option value="kyc_rejected">KYC Rejected</option>
+                    <option value="account_blocked">Account Blocked</option>
+                  </select>
+                </div>
+
+                {/* Subject */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Subject
+                  </label>
+                  <input
+                    type="text"
+                    value={emailSubject}
+                    onChange={(e) => setEmailSubject(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Enter email subject"
+                  />
+                </div>
+
+                {/* Message */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Message
+                  </label>
+                  <textarea
+                    value={emailMessage}
+                    onChange={(e) => setEmailMessage(e.target.value)}
+                    rows={8}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Enter your message here..."
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Use {'{name}'} to personalize with user's name
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200">
+              <button
+                onClick={closeEmailModal}
+                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={sendEmail}
+                disabled={emailSending || !emailSubject || !emailMessage}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400 transition-colors flex items-center"
+              >
+                {emailSending ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <FaSend className="mr-2" />
+                    Send Email
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
