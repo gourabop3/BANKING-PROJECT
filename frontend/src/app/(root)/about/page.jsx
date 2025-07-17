@@ -2,7 +2,7 @@ import { FaReact, FaNodeJs, FaGithub, FaLinkedin, FaInstagram, FaTelegram } from
 import { SiNextdotjs, SiTailwindcss, SiMongodb, SiExpress, SiJsonwebtokens, SiCloudinary, SiRazorpay, SiOpenai } from 'react-icons/si';
 import { MdPayment, MdAccountBalance, MdSecurity, MdPhoneAndroid, MdReceipt, MdCreditCard, MdSupport, MdSwapHoriz } from 'react-icons/md';
 import { AiOutlineMail } from 'react-icons/ai';
-//import HeaderName from '@/components/HeaderName';
+import HeaderName from '@/components/HeaderName';
 
 const frontendDependencies = [
   { name: 'Next.js', desc: 'React framework for server-side rendering and routing in the frontend.' },
