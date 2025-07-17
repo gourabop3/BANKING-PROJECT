@@ -469,7 +469,7 @@ class UPIService {
             throw new ApiError(400, 'UPI ID not set for the user');
         }
 
-        const otp = require('random-int')(100000, 999999).toString();
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
         // Store OTP with 10-minute expiry
         upiPinOtpStore.set(userId.toString(), {
