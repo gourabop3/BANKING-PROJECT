@@ -10,6 +10,7 @@ const rechargeRoutes = require('./recharge');
 const upiRoutes = require('./upi');
 const supportRoutes = require('./support');
 const paymentGatewayRoutes = require('./payment-gateway');
+const productsRoutes = require('./products');
 
 const router = express.Router();
 
@@ -25,5 +26,6 @@ router.use('/recharge', rechargeRoutes);
 router.use('/upi', upiRoutes);
 router.use('/support', supportRoutes);
 router.use('/payment-gateway', paymentGatewayRoutes);
+router.use('/products', productsRoutes);
 
 module.exports = router;

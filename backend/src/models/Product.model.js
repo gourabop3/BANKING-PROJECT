@@ -25,8 +25,16 @@ const ProductSchema = new mongoose.Schema({
     category: {
         type: String,
         required: true,
-        enum: ['recharge', 'transfer', 'loan', 'investment', 'insurance', 'utilities', 'other']
+        enum: ['web-templates', 'mobile-apps', 'desktop-software', 'scripts', 'plugins', 'themes', 'components', 'apis', 'databases', 'other']
     },
+    subcategory: {
+        type: String,
+        trim: true
+    },
+    technology: [{
+        type: String,
+        trim: true
+    }],
     images: [{
         url: {
             type: String,
@@ -39,7 +47,50 @@ const ProductSchema = new mongoose.Schema({
         isPrimary: {
             type: Boolean,
             default: false
+        },
+        cloudinaryId: {
+            type: String
         }
+    }],
+    sourceCode: {
+        url: {
+            type: String,
+            required: true
+        },
+        filename: {
+            type: String,
+            required: true
+        },
+        cloudinaryId: {
+            type: String,
+            required: true
+        },
+        size: {
+            type: Number
+        },
+        format: {
+            type: String
+        }
+    },
+    demoUrl: {
+        type: String,
+        trim: true
+    },
+    downloadCount: {
+        type: Number,
+        default: 0
+    },
+    version: {
+        type: String,
+        default: '1.0.0'
+    },
+    requirements: [{
+        type: String,
+        trim: true
+    }],
+    compatibility: [{
+        type: String,
+        trim: true
     }],
     features: [{
         type: String,

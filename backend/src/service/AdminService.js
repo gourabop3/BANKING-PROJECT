@@ -6,6 +6,7 @@ const { TransactionModel } = require('../models/Transactions.model');
 const { AccountModel } = require('../models/Account.model');
 const { DiscountModel } = require('../models/Discount.model');
 const { ProductModel } = require('../models/Product.model');
+const { uploadImageToCloudinary, uploadFileToCloudinary, deleteFromCloudinary } = require('../config/cloudinary');
 const NodeMailerService = require('../utils/NodeMail');
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@gmail.com';
@@ -327,6 +328,11 @@ class AdminService {
                 productData.sku = `PROD-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
             }
 
+            // Validate required fields for source code products
+            if (!productData.sourceCode || !productData.sourceCode.url) {
+                throw new ApiError(400, 'Source code file is required');
+            }
+
             const product = new ProductModel(productData);
             await product.save();
 
@@ -372,10 +378,26 @@ class AdminService {
 
     static async deleteProduct(productId) {
         try {
-            const product = await ProductModel.findByIdAndDelete(productId);
+            const product = await ProductModel.findById(productId);
             if (!product) {
                 throw new ApiError(404, 'Product not found');
             }
+
+            // Delete images from Cloudinary
+            if (product.images && product.images.length > 0) {
+                const deleteImagePromises = product.images
+                    .filter(img => img.cloudinaryId)
+                    .map(img => deleteFromCloudinary(img.cloudinaryId, 'image'));
+                await Promise.all(deleteImagePromises);
+            }
+
+            // Delete source code from Cloudinary
+            if (product.sourceCode && product.sourceCode.cloudinaryId) {
+                await deleteFromCloudinary(product.sourceCode.cloudinaryId, 'raw');
+            }
+
+            // Delete product from database
+            await ProductModel.findByIdAndDelete(productId);
 
             return {
                 success: true,
