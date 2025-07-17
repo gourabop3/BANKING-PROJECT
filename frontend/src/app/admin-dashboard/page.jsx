@@ -12,6 +12,7 @@ import {
   FaCreditCard,
   FaUsers,
   FaCog,
+  FaBox,
   FaBell,
   FaSearch,
   FaChevronLeft,
@@ -47,6 +48,16 @@ import {
 } from 'react-icons/fa';
 import { MdDashboard, MdNotifications, MdSettings, MdEmail, MdVerified, MdPending, MdCancel } from 'react-icons/md';
 import { axiosClient } from '@/utils/AxiosClient';
+import dynamic from 'next/dynamic';
+
+// Dynamically import ProductManagement to avoid SSR issues
+const ProductManagement = dynamic(() => import('./products/page'), { 
+  ssr: false,
+  loading: () => <div className="flex items-center justify-center py-8">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    <span className="ml-2 text-gray-600">Loading products...</span>
+  </div>
+});
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -130,6 +141,8 @@ export default function AdminDashboard() {
       fetchDashboardStats();
     } else if (tab === 'users') {
       fetchUsers();
+    } else if (tab === 'products') {
+      // Products are handled by the separate page component
     } else if (tab === 'kyc') {
       fetchKYCPending();
     } else if (tab === 'transactions') {
@@ -371,6 +384,7 @@ export default function AdminDashboard() {
   const sidebarItems = [
     { id: 'dashboard', label: 'Dashboard', icon: FaTachometerAlt },
     { id: 'users', label: 'Users', icon: FaUsers },
+    { id: 'products', label: 'Products', icon: FaBox },
     { id: 'kyc', label: 'KYC Verification', icon: FaIdCard },
     { id: 'transactions', label: 'Transactions', icon: FaMoneyBill },
     { id: 'discounts', label: 'Discounts', icon: FaPercent },
@@ -947,6 +961,13 @@ export default function AdminDashboard() {
                   ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Products Management */}
+          {tab === 'products' && (
+            <div className="space-y-6">
+              <ProductManagement />
             </div>
           )}
 
