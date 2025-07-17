@@ -116,6 +116,126 @@ class AdminController {
             next(err);
         }
     }
+
+    // Product Management Methods
+    static async getProducts(req, res, next) {
+        try {
+            const filters = {
+                category: req.query.category,
+                isActive: req.query.isActive !== undefined ? req.query.isActive === 'true' : undefined,
+                isFeatured: req.query.isFeatured !== undefined ? req.query.isFeatured === 'true' : undefined,
+                search: req.query.search
+            };
+            const data = await AdminService.getProducts(filters);
+            res.status(200).send(data);
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    static async getProductById(req, res, next) {
+        try {
+            const { id } = req.params;
+            const data = await AdminService.getProductById(id);
+            res.status(200).send(data);
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    static async createProduct(req, res, next) {
+        try {
+            const data = await AdminService.createProduct(req.body);
+            res.status(201).send(data);
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    static async updateProduct(req, res, next) {
+        try {
+            const { id } = req.params;
+            const data = await AdminService.updateProduct(id, req.body);
+            res.status(200).send(data);
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    static async deleteProduct(req, res, next) {
+        try {
+            const { id } = req.params;
+            const data = await AdminService.deleteProduct(id);
+            res.status(200).send(data);
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    static async toggleProductStatus(req, res, next) {
+        try {
+            const { id } = req.params;
+            const { isActive } = req.body;
+            const data = await AdminService.toggleProductStatus(id, isActive);
+            res.status(200).send(data);
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    static async toggleFeaturedProduct(req, res, next) {
+        try {
+            const { id } = req.params;
+            const { isFeatured } = req.body;
+            const data = await AdminService.toggleFeaturedProduct(id, isFeatured);
+            res.status(200).send(data);
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    static async uploadProductImage(req, res, next) {
+        try {
+            const { id } = req.params;
+            const imageData = {
+                url: req.body.url,
+                altText: req.body.altText || '',
+                isPrimary: req.body.isPrimary || false
+            };
+            const data = await AdminService.uploadProductImage(id, imageData);
+            res.status(200).send(data);
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    static async removeProductImage(req, res, next) {
+        try {
+            const { id, imageIndex } = req.params;
+            const data = await AdminService.removeProductImage(id, parseInt(imageIndex));
+            res.status(200).send(data);
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    static async getProductCategories(req, res, next) {
+        try {
+            const data = await AdminService.getProductCategories();
+            res.status(200).send(data);
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    static async getDashboardStats(req, res, next) {
+        try {
+            const data = await AdminService.getDashboardStats();
+            res.status(200).send(data);
+        } catch (err) {
+            next(err);
+        }
+    }
 }
 
 module.exports = AdminController;

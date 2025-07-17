@@ -5,6 +5,7 @@ const { ProfileModel } = require('../models/Profile.model');
 const { TransactionModel } = require('../models/Transactions.model');
 const { AccountModel } = require('../models/Account.model');
 const { DiscountModel } = require('../models/Discount.model');
+const { ProductModel } = require('../models/Product.model');
 const NodeMailerService = require('../utils/NodeMail');
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@gmail.com';
@@ -269,6 +270,261 @@ class AdminService {
             success: true,
             message: 'Discount deleted successfully'
         };
+    }
+
+    // Product Management Methods
+    static async getProducts(filters = {}) {
+        try {
+            const query = {};
+            
+            // Apply filters
+            if (filters.category) {
+                query.category = filters.category;
+            }
+            if (filters.isActive !== undefined) {
+                query.isActive = filters.isActive;
+            }
+            if (filters.isFeatured !== undefined) {
+                query.isFeatured = filters.isFeatured;
+            }
+            if (filters.search) {
+                query.$text = { $search: filters.search };
+            }
+
+            const products = await ProductModel.find(query)
+                .sort({ createdAt: -1 })
+                .lean();
+
+            return {
+                success: true,
+                data: products,
+                count: products.length
+            };
+        } catch (error) {
+            throw new ApiError(500, 'Error fetching products: ' + error.message);
+        }
+    }
+
+    static async getProductById(productId) {
+        try {
+            const product = await ProductModel.findById(productId).lean();
+            if (!product) {
+                throw new ApiError(404, 'Product not found');
+            }
+            return {
+                success: true,
+                data: product
+            };
+        } catch (error) {
+            throw new ApiError(500, 'Error fetching product: ' + error.message);
+        }
+    }
+
+    static async createProduct(productData) {
+        try {
+            // Generate SKU if not provided
+            if (!productData.sku) {
+                productData.sku = `PROD-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
+            }
+
+            const product = new ProductModel(productData);
+            await product.save();
+
+            return {
+                success: true,
+                data: product,
+                message: 'Product created successfully'
+            };
+        } catch (error) {
+            if (error.code === 11000) {
+                throw new ApiError(400, 'Product SKU already exists');
+            }
+            throw new ApiError(500, 'Error creating product: ' + error.message);
+        }
+    }
+
+    static async updateProduct(productId, productData) {
+        try {
+            productData.updatedBy = 'admin';
+            
+            const product = await ProductModel.findByIdAndUpdate(
+                productId,
+                productData,
+                { new: true, runValidators: true }
+            );
+
+            if (!product) {
+                throw new ApiError(404, 'Product not found');
+            }
+
+            return {
+                success: true,
+                data: product,
+                message: 'Product updated successfully'
+            };
+        } catch (error) {
+            if (error.code === 11000) {
+                throw new ApiError(400, 'Product SKU already exists');
+            }
+            throw new ApiError(500, 'Error updating product: ' + error.message);
+        }
+    }
+
+    static async deleteProduct(productId) {
+        try {
+            const product = await ProductModel.findByIdAndDelete(productId);
+            if (!product) {
+                throw new ApiError(404, 'Product not found');
+            }
+
+            return {
+                success: true,
+                message: 'Product deleted successfully'
+            };
+        } catch (error) {
+            throw new ApiError(500, 'Error deleting product: ' + error.message);
+        }
+    }
+
+    static async toggleProductStatus(productId, isActive) {
+        try {
+            const product = await ProductModel.findByIdAndUpdate(
+                productId,
+                { isActive, updatedBy: 'admin' },
+                { new: true }
+            );
+
+            if (!product) {
+                throw new ApiError(404, 'Product not found');
+            }
+
+            return {
+                success: true,
+                data: product,
+                message: `Product ${isActive ? 'activated' : 'deactivated'} successfully`
+            };
+        } catch (error) {
+            throw new ApiError(500, 'Error updating product status: ' + error.message);
+        }
+    }
+
+    static async toggleFeaturedProduct(productId, isFeatured) {
+        try {
+            const product = await ProductModel.findByIdAndUpdate(
+                productId,
+                { isFeatured, updatedBy: 'admin' },
+                { new: true }
+            );
+
+            if (!product) {
+                throw new ApiError(404, 'Product not found');
+            }
+
+            return {
+                success: true,
+                data: product,
+                message: `Product ${isFeatured ? 'marked as featured' : 'removed from featured'} successfully`
+            };
+        } catch (error) {
+            throw new ApiError(500, 'Error updating featured status: ' + error.message);
+        }
+    }
+
+    static async uploadProductImage(productId, imageData) {
+        try {
+            const product = await ProductModel.findById(productId);
+            if (!product) {
+                throw new ApiError(404, 'Product not found');
+            }
+
+            // Add new image
+            product.images.push(imageData);
+            await product.save();
+
+            return {
+                success: true,
+                data: product,
+                message: 'Image uploaded successfully'
+            };
+        } catch (error) {
+            throw new ApiError(500, 'Error uploading image: ' + error.message);
+        }
+    }
+
+    static async removeProductImage(productId, imageIndex) {
+        try {
+            const product = await ProductModel.findById(productId);
+            if (!product) {
+                throw new ApiError(404, 'Product not found');
+            }
+
+            if (imageIndex >= 0 && imageIndex < product.images.length) {
+                product.images.splice(imageIndex, 1);
+                await product.save();
+            } else {
+                throw new ApiError(400, 'Invalid image index');
+            }
+
+            return {
+                success: true,
+                data: product,
+                message: 'Image removed successfully'
+            };
+        } catch (error) {
+            throw new ApiError(500, 'Error removing image: ' + error.message);
+        }
+    }
+
+    static async getProductCategories() {
+        try {
+            const categories = await ProductModel.distinct('category');
+            return {
+                success: true,
+                data: categories
+            };
+        } catch (error) {
+            throw new ApiError(500, 'Error fetching categories: ' + error.message);
+        }
+    }
+
+    static async getDashboardStats() {
+        try {
+            const [
+                totalProducts,
+                activeProducts,
+                featuredProducts,
+                totalUsers,
+                activeUsers,
+                totalTransactions
+            ] = await Promise.all([
+                ProductModel.countDocuments(),
+                ProductModel.countDocuments({ isActive: true }),
+                ProductModel.countDocuments({ isFeatured: true }),
+                UserModel.countDocuments(),
+                UserModel.countDocuments({ isActive: true }),
+                TransactionModel.countDocuments()
+            ]);
+
+            return {
+                success: true,
+                data: {
+                    products: {
+                        total: totalProducts,
+                        active: activeProducts,
+                        featured: featuredProducts
+                    },
+                    users: {
+                        total: totalUsers,
+                        active: activeUsers
+                    },
+                    transactions: {
+                        total: totalTransactions
+                    }
+                }
+            };
+        } catch (error) {
+            throw new ApiError(500, 'Error fetching dashboard stats: ' + error.message);
+        }
     }
 }
 
