@@ -11,7 +11,7 @@ import { usePathname } from 'next/navigation';
 import AppSidebar from '@/components/AppSidebar';
 const MainLayout = ({children}) => {
   const pathname = usePathname();
-  
+  //define
   // Define admin pages and auth pages that should not show user navbar/sidebar
   const isAdminPage = pathname.startsWith('/admin-dashboard') || pathname.startsWith('/admin-login');
   const isAuthPage = pathname === '/login' || pathname === '/register';
