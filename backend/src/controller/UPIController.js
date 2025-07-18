@@ -175,6 +175,38 @@ class UPIController {
             next(err);
         }
     }
+
+    // Money Request Methods
+    static async sendMoneyRequest(req, res, next) {
+        try {
+            const { from_upi, amount, note } = req.body;
+            const result = await UPIService.sendMoneyRequest(req.user, { from_upi, amount, note });
+            res.json(result);
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    static async getMoneyRequests(req, res, next) {
+        try {
+            const { type } = req.query; // 'sent', 'received', or 'all'
+            const result = await UPIService.getMoneyRequests(req.user, type);
+            res.json(result);
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    static async respondToMoneyRequest(req, res, next) {
+        try {
+            const { requestId } = req.params;
+            const { action, pin, reason } = req.body; // action: 'approve' or 'reject'
+            const result = await UPIService.respondToMoneyRequest(req.user, requestId, action, { pin, reason });
+            res.json(result);
+        } catch (err) {
+            next(err);
+        }
+    }
 }
 
 module.exports = UPIController;

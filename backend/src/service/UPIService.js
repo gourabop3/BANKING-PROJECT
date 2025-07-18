@@ -3,6 +3,7 @@ const bcryptjs = require('bcryptjs');
 const { UserModel } = require('../models/User.model');
 const { AccountModel } = require('../models/Account.model');
 const { TransactionModel } = require('../models/Transactions.model');
+const { MoneyRequestModel } = require('../models/MoneyRequest.model');
 const ApiError = require('../utils/ApiError');
 const mongoose = require('mongoose');
 const NodeMailerService = require('../utils/NodeMail');
@@ -544,6 +545,189 @@ class UPIService {
         }
 
         return { msg: 'UPI PIN reset successful' };
+    }
+
+    /**
+     * Send a money request to another UPI user
+     */
+    static async sendMoneyRequest(fromUserId, { from_upi, amount, note }) {
+        // Validate inputs
+        if (!from_upi || !amount) {
+            throw new ApiError(400, 'UPI ID and amount are required');
+        }
+
+        if (amount <= 0) {
+            throw new ApiError(400, 'Amount must be greater than 0');
+        }
+
+        // Find the requesting user
+        const fromUser = await UserModel.findById(fromUserId).select('upi_id name email');
+        if (!fromUser || !fromUser.upi_id) {
+            throw new ApiError(404, 'Your UPI ID not found. Please register UPI first.');
+        }
+
+        // Find the target user by UPI ID
+        const toUser = await UserModel.findOne({ upi_id: from_upi }).select('_id upi_id name email');
+        if (!toUser) {
+            throw new ApiError(404, 'Recipient UPI ID not found');
+        }
+
+        // Check if requesting money from self
+        if (fromUser._id.toString() === toUser._id.toString()) {
+            throw new ApiError(400, 'Cannot request money from yourself');
+        }
+
+        // Check for existing pending request between these users for similar amount
+        const existingRequest = await MoneyRequestModel.findOne({
+            from_user: fromUserId,
+            to_user: toUser._id,
+            amount: amount,
+            status: 'pending',
+            expires_at: { $gt: new Date() }
+        });
+
+        if (existingRequest) {
+            throw new ApiError(400, 'You already have a pending request for the same amount to this user');
+        }
+
+        // Create the money request
+        const moneyRequest = await MoneyRequestModel.create({
+            from_user: fromUserId,
+            to_user: toUser._id,
+            from_upi: fromUser.upi_id,
+            to_upi: toUser.upi_id,
+            amount: amount,
+            note: note || `Money request from ${fromUser.name}`,
+        });
+
+        // TODO: Send notification to the target user (email/push notification)
+        
+        return {
+            success: true,
+            message: 'Money request sent successfully',
+            request: {
+                id: moneyRequest._id,
+                to_user: toUser.name,
+                to_upi: toUser.upi_id,
+                amount: amount,
+                note: note,
+                expires_at: moneyRequest.expires_at
+            }
+        };
+    }
+
+    /**
+     * Get money requests for a user (both sent and received)
+     */
+    static async getMoneyRequests(userId, type = 'all') {
+        let query = {};
+        
+        if (type === 'sent') {
+            query.from_user = userId;
+        } else if (type === 'received') {
+            query.to_user = userId;
+        } else {
+            query = {
+                $or: [
+                    { from_user: userId },
+                    { to_user: userId }
+                ]
+            };
+        }
+
+        const requests = await MoneyRequestModel.find(query)
+            .populate('from_user', 'name email upi_id')
+            .populate('to_user', 'name email upi_id')
+            .sort({ createdAt: -1 })
+            .limit(50);
+
+        return {
+            success: true,
+            requests: requests.map(req => ({
+                id: req._id,
+                from_user: req.from_user,
+                to_user: req.to_user,
+                amount: req.amount,
+                note: req.note,
+                status: req.status,
+                created_at: req.createdAt,
+                expires_at: req.expires_at,
+                responded_at: req.responded_at,
+                rejection_reason: req.rejection_reason
+            }))
+        };
+    }
+
+    /**
+     * Respond to a money request (approve or reject)
+     */
+    static async respondToMoneyRequest(userId, requestId, action, options = {}) {
+        if (!['approve', 'reject'].includes(action)) {
+            throw new ApiError(400, 'Action must be either approve or reject');
+        }
+
+        const request = await MoneyRequestModel.findById(requestId);
+        if (!request) {
+            throw new ApiError(404, 'Money request not found');
+        }
+
+        // Check if user is the recipient of the request
+        if (request.to_user.toString() !== userId.toString()) {
+            throw new ApiError(403, 'You can only respond to requests sent to you');
+        }
+
+        // Check if request is still pending
+        if (request.status !== 'pending') {
+            throw new ApiError(400, 'Request has already been responded to');
+        }
+
+        // Check if request has expired
+        if (new Date() > request.expires_at) {
+            throw new ApiError(400, 'Request has expired');
+        }
+
+        if (action === 'approve') {
+            // Process the payment from to_user to from_user
+            try {
+                // Get user's PIN for validation
+                const { pin } = options;
+                if (!pin) {
+                    throw new ApiError(400, 'PIN is required to approve payment');
+                }
+
+                // Process the payment using existing payment logic
+                const paymentResult = await this.processPayment(userId, {
+                    recipient_upi: request.from_upi,
+                    amount: request.amount,
+                    note: `Payment for request: ${request.note}`,
+                    pin: pin
+                });
+
+                // Update request status
+                request.status = 'approved';
+                request.responded_at = new Date();
+                await request.save();
+
+                return {
+                    success: true,
+                    message: 'Money request approved and payment processed',
+                    transaction: paymentResult
+                };
+            } catch (error) {
+                throw new ApiError(400, `Payment failed: ${error.message}`);
+            }
+        } else {
+            // Reject the request
+            request.status = 'rejected';
+            request.responded_at = new Date();
+            request.rejection_reason = options.reason || 'No reason provided';
+            await request.save();
+
+            return {
+                success: true,
+                message: 'Money request rejected'
+            };
+        }
     }
 }
 

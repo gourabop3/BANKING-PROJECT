@@ -30,4 +30,9 @@ router.get('/info', UPIController.getUserUPIInfo);
 router.post('/send-otp', UPIController.sendResetPinOTP);
 router.post('/reset-pin', UPIController.resetUPIPin);
 
+// Money Request Routes
+router.post('/request-money', UPIController.sendMoneyRequest);
+router.get('/money-requests', UPIController.getMoneyRequests);
+router.post('/money-requests/:requestId/respond', UPIController.respondToMoneyRequest);
+
 module.exports = router;

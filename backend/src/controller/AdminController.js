@@ -1,4 +1,5 @@
 const AdminService = require('../service/AdminService');
+const KYCService = require('../service/KYCService');
 
 class AdminController {
     static async loginAdmin(req, res, next) {
@@ -111,6 +112,37 @@ class AdminController {
         try {
             const { id } = req.params;
             const data = await AdminService.deleteDiscount(id);
+            res.status(200).send(data);
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    // KYC Management Methods
+    static async getKYCPending(req, res, next) {
+        try {
+            const data = await KYCService.listPending();
+            res.status(200).send(data);
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    static async approveKYC(req, res, next) {
+        try {
+            const { id } = req.params;
+            const data = await KYCService.approve(id);
+            res.status(200).send(data);
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    static async rejectKYC(req, res, next) {
+        try {
+            const { id } = req.params;
+            const { reason } = req.body;
+            const data = await KYCService.reject(id, reason);
             res.status(200).send(data);
         } catch (err) {
             next(err);

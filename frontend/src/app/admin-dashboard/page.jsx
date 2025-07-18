@@ -303,23 +303,32 @@ export default function AdminDashboard() {
     try {
       const response = await axiosClient.put(`/admin/kyc/${applicationId}/approve`);
       if (response.data.success) {
+        // Show success message
+        alert('KYC application approved successfully!');
         fetchKYCPending();
         fetchUsers(); // Refresh users to update KYC status
       }
     } catch (error) {
       console.error('Error approving KYC:', error);
+      alert('Failed to approve KYC application. Please try again.');
     }
   };
 
-  const rejectKYC = async (applicationId, reason) => {
+  const rejectKYC = async (applicationId, defaultReason = 'Documents not clear') => {
+    const reason = prompt('Please enter the reason for rejection:', defaultReason);
+    if (!reason) return; // User cancelled
+    
     try {
       const response = await axiosClient.put(`/admin/kyc/${applicationId}/reject`, { reason });
       if (response.data.success) {
+        // Show success message
+        alert('KYC application rejected successfully!');
         fetchKYCPending();
         fetchUsers(); // Refresh users to update KYC status
       }
     } catch (error) {
       console.error('Error rejecting KYC:', error);
+      alert('Failed to reject KYC application. Please try again.');
     }
   };
 
@@ -858,7 +867,7 @@ export default function AdminDashboard() {
                                       Approve
                                     </button>
                                     <button
-                                      onClick={() => rejectKYC(user._id, 'Documents not clear')}
+                                      onClick={() => rejectKYC(user._id)}
                                       className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                                     >
                                       Reject
@@ -971,29 +980,106 @@ export default function AdminDashboard() {
                     <p className="text-gray-600">No pending KYC applications</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     {kycPending.map((application) => (
-                      <div key={application._id} className="border border-gray-200 rounded-lg p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h4 className="font-medium text-gray-900">{application.user?.name}</h4>
-                            <p className="text-sm text-gray-500">{application.user?.email}</p>
-                            <p className="text-xs text-gray-400">
-                              Applied: {new Date(application.createdAt).toLocaleDateString()}
-                            </p>
+                      <div key={application._id} className="bg-white border border-gray-200 rounded-lg shadow-sm">
+                        <div className="p-6">
+                          <div className="flex items-start justify-between mb-4">
+                            <div>
+                              <h4 className="text-lg font-semibold text-gray-900">{application.user?.name || application.name}</h4>
+                              <p className="text-sm text-gray-500">{application.user?.email}</p>
+                              <p className="text-xs text-gray-400">
+                                Applied: {new Date(application.createdAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                              {application.status}
+                            </span>
                           </div>
-                          <div className="flex space-x-2">
+
+                          {/* KYC Details */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div>
+                              <h5 className="font-medium text-gray-900 mb-3">Personal Information</h5>
+                              <div className="space-y-2 text-sm">
+                                <div className="flex justify-between">
+                                  <span className="text-gray-500">Full Name:</span>
+                                  <span className="text-gray-900">{application.name}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-gray-500">Mobile:</span>
+                                  <span className="text-gray-900">{application.mobileNumber}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-gray-500">Address:</span>
+                                  <span className="text-gray-900 text-right max-w-48">{application.address}</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div>
+                              <h5 className="font-medium text-gray-900 mb-3">Document Details</h5>
+                              <div className="space-y-2 text-sm">
+                                <div className="flex justify-between">
+                                  <span className="text-gray-500">Aadhaar:</span>
+                                  <span className="text-gray-900">{application.aadhaarNumber}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-gray-500">PAN:</span>
+                                  <span className="text-gray-900">{application.panNumber}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Document Images */}
+                          {application.documents && (
+                            <div className="mb-6">
+                              <h5 className="font-medium text-gray-900 mb-3">Uploaded Documents</h5>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {application.documents.aadhaarImage && (
+                                  <div>
+                                    <p className="text-sm text-gray-500 mb-2">Aadhaar Card</p>
+                                    <div className="border border-gray-200 rounded-lg p-2">
+                                      <img 
+                                        src={application.documents.aadhaarImage} 
+                                        alt="Aadhaar Card" 
+                                        className="w-full h-32 object-cover rounded cursor-pointer hover:opacity-80"
+                                        onClick={() => window.open(application.documents.aadhaarImage, '_blank')}
+                                      />
+                                    </div>
+                                  </div>
+                                )}
+                                {application.documents.panImage && (
+                                  <div>
+                                    <p className="text-sm text-gray-500 mb-2">PAN Card</p>
+                                    <div className="border border-gray-200 rounded-lg p-2">
+                                      <img 
+                                        src={application.documents.panImage} 
+                                        alt="PAN Card" 
+                                        className="w-full h-32 object-cover rounded cursor-pointer hover:opacity-80"
+                                        onClick={() => window.open(application.documents.panImage, '_blank')}
+                                      />
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Action Buttons */}
+                          <div className="flex space-x-3 pt-4 border-t border-gray-200">
                             <button
                               onClick={() => approveKYC(application._id)}
-                              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                              className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
                             >
-                              Approve
+                              ✓ Approve KYC
                             </button>
                             <button
-                              onClick={() => rejectKYC(application._id, 'Documents not clear')}
-                              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                              onClick={() => rejectKYC(application._id)}
+                              className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
                             >
-                              Reject
+                              ✗ Reject KYC
                             </button>
                           </div>
                         </div>
