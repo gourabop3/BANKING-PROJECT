@@ -1,0 +1,9 @@
+# Video segment list
+file 'intro_video.mp4'
+file 'login_video.mp4'
+file 'dashboard_video.mp4'
+file 'users_video.mp4'
+file 'kyc_video.mp4'
+file 'transactions_video.mp4'
+file 'email_video.mp4'
+file 'conclusion_video.mp4'

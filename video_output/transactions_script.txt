@@ -1,0 +1,1 @@
+The transaction history and monitoring tools provide comprehensive oversight of all banking activities. Administrators can filter transactions by date, amount, user, and status. Advanced search capabilities allow quick identification of patterns, investigation of specific activities, and generation of detailed reports.

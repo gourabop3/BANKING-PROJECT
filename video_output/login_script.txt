@@ -1,0 +1,1 @@
+First, let's look at the secure authentication system. The admin dashboard features robust login functionality with role-based access control. Administrators can securely access the system using their credentials, ensuring that only authorized personnel can manage banking operations.

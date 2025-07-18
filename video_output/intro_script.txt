@@ -1,0 +1,1 @@
+Welcome to the CBI Banking Admin Dashboard demonstration! This comprehensive admin panel provides powerful tools for managing banking operations, user accounts, KYC processes, and transaction monitoring. Let's explore the key features that make this system exceptional for modern banking administration.

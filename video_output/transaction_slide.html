@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction Monitoring - CBI Banking Admin Dashboard</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 40px;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+        .title {
+            font-size: 3em;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .content {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="icon">💳</div>
+        <div class="title">Transaction Monitoring</div>
+    </div>
+    <div class="content">
+        
+    <div class='mockup'>
+        <h3>💳 Financial Transaction Oversight</h3>
+        <p>Advanced filtering and monitoring of all banking activities</p>
+        <div style='background: #f8f9fa; padding: 20px; border-radius: 10px; margin-top: 20px;'>
+            <div style='display: flex; gap: 15px; margin-bottom: 15px;'>
+                <select style='padding: 8px; border: 1px solid #ccc; border-radius: 4px;'>
+                    <option>All Transaction Types</option>
+                    <option>Deposits</option>
+                    <option>Withdrawals</option>
+                    <option>Transfers</option>
+                </select>
+                <input type='date' style='padding: 8px; border: 1px solid #ccc; border-radius: 4px;'>
+                <input type='text' placeholder='Search amount...' style='padding: 8px; border: 1px solid #ccc; border-radius: 4px;'>
+            </div>
+            <div style='background: white; padding: 15px; border-radius: 8px;'>
+                <div style='display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee;'>
+                    <span>Transfer to Jane Doe</span>
+                    <span style='color: #dc3545;'>-$1,250.00</span>
+                </div>
+                <div style='display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee;'>
+                    <span>Salary Deposit</span>
+                    <span style='color: #28a745;'>+$3,500.00</span>
+                </div>
+                <div style='display: flex; justify-content: space-between; padding: 10px 0;'>
+                    <span>ATM Withdrawal</span>
+                    <span style='color: #dc3545;'>-$200.00</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    </div>
+</body>
+</html>
