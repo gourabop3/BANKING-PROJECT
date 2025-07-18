@@ -14,6 +14,7 @@ const UPIPage = () => {
   // Remove all KYC-related redirect or blocking logic. No early return or router.replace for non-KYC users.
 
   const [activeTab, setActiveTab] = useState('pay');
+  const [renderError, setRenderError] = useState(null);
   const [upiInfo, setUpiInfo] = useState(null);
 
   const [transactions, setTransactions] = useState([]);
@@ -81,10 +82,10 @@ const UPIPage = () => {
   }, []);
 
   useEffect(() => {
-    if (activeTab === 'manage') {
+    if (activeTab === 'manage' && user) {
       fetchMoneyRequests();
     }
-  }, [activeTab]);
+  }, [activeTab, user]);
 
   const fetchUPIInfo = async () => {
     try {
@@ -491,13 +492,23 @@ const UPIPage = () => {
     
     try {
       const currentToken = typeof window !== 'undefined' ? localStorage.getItem('token') : '';
+      if (!currentToken) {
+        setRequestsError('Authentication required');
+        return;
+      }
+      
       const response = await axiosClient.get('/upi/money-requests', {
         headers: { Authorization: `Bearer ${currentToken}` }
       });
       
-      setMoneyRequests(response.data.requests || []);
+      if (response.data && response.data.requests) {
+        setMoneyRequests(response.data.requests);
+      } else {
+        setMoneyRequests([]);
+      }
     } catch (error) {
-      setRequestsError(error.response?.data?.msg || 'Failed to fetch money requests');
+      console.error('Error fetching money requests:', error);
+      setRequestsError(error.response?.data?.msg || error.message || 'Failed to fetch money requests');
     } finally {
       setRequestsLoading(false);
     }
@@ -507,6 +518,11 @@ const UPIPage = () => {
   const respondToRequest = async (requestId, action, pin = null, reason = null) => {
     try {
       const currentToken = typeof window !== 'undefined' ? localStorage.getItem('token') : '';
+      if (!currentToken) {
+        alert('Authentication required. Please login again.');
+        return;
+      }
+      
       const response = await axiosClient.post(`/upi/money-requests/${requestId}/respond`, {
         action,
         pin,
@@ -516,19 +532,21 @@ const UPIPage = () => {
       });
       
       // Refresh requests list
-      fetchMoneyRequests();
+      await fetchMoneyRequests();
       
       // Show success message
-      alert(response.data.message || 'Request processed successfully');
+      alert(response.data?.message || 'Request processed successfully');
       
     } catch (error) {
-      alert(error.response?.data?.msg || 'Failed to process request');
+      console.error('Error responding to request:', error);
+      alert(error.response?.data?.msg || error.message || 'Failed to process request');
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100">
-      <div className="max-w-4xl mx-auto py-10 px-4">
+  try {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100">
+        <div className="max-w-4xl mx-auto py-10 px-4">
         {/* Hero Header */}
         <div className="flex flex-col items-center mb-10">
           <div className="bg-gradient-to-tr from-blue-600 to-indigo-500 rounded-full p-4 shadow-lg mb-4">
@@ -865,6 +883,14 @@ const UPIPage = () => {
 
           {/* Manage Tab - Money Requests */}
           {activeTab === 'manage' && (
+            !user ? (
+              <div className="bg-white/90 rounded-2xl shadow-xl p-8 mb-8">
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="text-gray-500 mt-2">Loading user data...</p>
+                </div>
+              </div>
+            ) : (
             <div className="bg-white/90 rounded-2xl shadow-xl p-8 mb-8">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold flex items-center gap-2 text-blue-700">
@@ -883,6 +909,9 @@ const UPIPage = () => {
               {requestsError && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
                   <p className="text-red-700">{requestsError}</p>
+                  <p className="text-sm text-red-600 mt-2">
+                    Please check your internet connection or try refreshing the page.
+                  </p>
                 </div>
               )}
 
@@ -898,7 +927,7 @@ const UPIPage = () => {
                     <p>No money requests found</p>
                   </div>
                 ) : (
-                  moneyRequests.map((request) => (
+                  moneyRequests.filter(request => request && request.from_user && request.to_user).map((request) => (
                     <div key={request.id} className="border rounded-xl p-4 hover:bg-gray-50 transition-colors">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -918,17 +947,17 @@ const UPIPage = () => {
                           </div>
                           
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-                            <div>
-                              <p className="text-sm text-gray-500">
-                                {request.from_user._id === user._id ? 'Requested from' : 'Request from'}:
-                              </p>
-                              <p className="font-medium">
-                                {request.from_user._id === user._id ? 
-                                  `${request.to_user.name} (${request.to_user.upi_id})` : 
-                                  `${request.from_user.name} (${request.from_user.upi_id})`
-                                }
-                              </p>
-                            </div>
+                                                         <div>
+                               <p className="text-sm text-gray-500">
+                                 {request.from_user._id === user?._id ? 'Requested from' : 'Request from'}:
+                               </p>
+                               <p className="font-medium">
+                                 {request.from_user._id === user?._id ? 
+                                   `${request.to_user?.name} (${request.to_user?.upi_id})` : 
+                                   `${request.from_user?.name} (${request.from_user?.upi_id})`
+                                 }
+                               </p>
+                             </div>
                             <div>
                               <p className="text-sm text-gray-500">Amount:</p>
                               <p className="font-bold text-blue-600">{formatCurrency(request.amount)}</p>
@@ -953,9 +982,9 @@ const UPIPage = () => {
                           </div>
                         </div>
 
-                        {/* Action buttons for received requests */}
-                        {request.to_user._id === user._id && request.status === 'pending' && 
-                         new Date() <= new Date(request.expires_at) && (
+                                                 {/* Action buttons for received requests */}
+                         {request.to_user?._id === user?._id && request.status === 'pending' && 
+                          new Date() <= new Date(request.expires_at) && (
                           <div className="flex flex-col gap-2 ml-4">
                             <button
                               onClick={() => {
@@ -1004,6 +1033,7 @@ const UPIPage = () => {
                 </ul>
               </div>
             </div>
+           )
           )}
         </div>
 
@@ -1129,9 +1159,31 @@ const UPIPage = () => {
             </div>
           </div>
         )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  } catch (error) {
+    console.error('UPI Page render error:', error);
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100">
+        <div className="max-w-4xl mx-auto py-10 px-4">
+          <div className="bg-white/90 rounded-2xl shadow-xl p-8 text-center">
+            <h1 className="text-2xl font-bold text-red-600 mb-4">Something went wrong</h1>
+            <p className="text-gray-700 mb-6">
+              We're sorry, but there was an error loading the UPI page. 
+              Please refresh the page or contact support if the problem persists.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Refresh Page
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 };
 
 export default UPIPage;
