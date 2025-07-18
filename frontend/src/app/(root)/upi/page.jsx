@@ -41,6 +41,12 @@ const UPIPage = () => {
   const [requestStatus, setRequestStatus] = useState({ success: null, error: null });
   const [requestLoading, setRequestLoading] = useState(false);
   const [requestValidation, setRequestValidation] = useState(null);
+  
+  // Money requests viewing and management
+  const [moneyRequests, setMoneyRequests] = useState([]);
+  const [requestsLoading, setRequestsLoading] = useState(false);
+  const [requestsError, setRequestsError] = useState(null);
+  const [showRequestDetails, setShowRequestDetails] = useState(null);
 
   const [registrationForm, setRegistrationForm] = useState({
     upi_id: '',
@@ -73,6 +79,12 @@ const UPIPage = () => {
     fetchUPIInfo();
     fetchTransactions();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'manage') {
+      fetchMoneyRequests();
+    }
+  }, [activeTab]);
 
   const fetchUPIInfo = async () => {
     try {
@@ -472,6 +484,48 @@ const UPIPage = () => {
     }
   };
 
+  // Fetch money requests
+  const fetchMoneyRequests = async () => {
+    setRequestsLoading(true);
+    setRequestsError(null);
+    
+    try {
+      const currentToken = typeof window !== 'undefined' ? localStorage.getItem('token') : '';
+      const response = await axiosClient.get('/upi/money-requests', {
+        headers: { Authorization: `Bearer ${currentToken}` }
+      });
+      
+      setMoneyRequests(response.data.requests || []);
+    } catch (error) {
+      setRequestsError(error.response?.data?.msg || 'Failed to fetch money requests');
+    } finally {
+      setRequestsLoading(false);
+    }
+  };
+
+  // Respond to money request
+  const respondToRequest = async (requestId, action, pin = null, reason = null) => {
+    try {
+      const currentToken = typeof window !== 'undefined' ? localStorage.getItem('token') : '';
+      const response = await axiosClient.post(`/upi/money-requests/${requestId}/respond`, {
+        action,
+        pin,
+        reason
+      }, {
+        headers: { Authorization: `Bearer ${currentToken}` }
+      });
+      
+      // Refresh requests list
+      fetchMoneyRequests();
+      
+      // Show success message
+      alert(response.data.message || 'Request processed successfully');
+      
+    } catch (error) {
+      alert(error.response?.data?.msg || 'Failed to process request');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100">
       <div className="max-w-4xl mx-auto py-10 px-4">
@@ -513,6 +567,7 @@ const UPIPage = () => {
             {[
               { id: 'pay', label: 'Pay', icon: MdSend },
               { id: 'request', label: 'Request', icon: FaHandHoldingUsd },
+              { id: 'manage', label: 'Manage', icon: MdRequest },
               { id: 'history', label: 'History', icon: MdHistory }
             ].map(({ id, label, icon: Icon }) => (
               <button
@@ -804,6 +859,149 @@ const UPIPage = () => {
                     </div>
                   ))
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* Manage Tab - Money Requests */}
+          {activeTab === 'manage' && (
+            <div className="bg-white/90 rounded-2xl shadow-xl p-8 mb-8">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold flex items-center gap-2 text-blue-700">
+                  <MdRequest />
+                  Manage Money Requests
+                </h2>
+                <button
+                  onClick={fetchMoneyRequests}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  disabled={requestsLoading}
+                >
+                  {requestsLoading ? 'Refreshing...' : 'Refresh'}
+                </button>
+              </div>
+
+              {requestsError && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                  <p className="text-red-700">{requestsError}</p>
+                </div>
+              )}
+
+              <div className="space-y-4">
+                {requestsLoading ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                    <p className="text-gray-500 mt-2">Loading requests...</p>
+                  </div>
+                ) : moneyRequests.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <MdRequest className="text-4xl mx-auto mb-2 opacity-50" />
+                    <p>No money requests found</p>
+                  </div>
+                ) : (
+                  moneyRequests.map((request) => (
+                    <div key={request.id} className="border rounded-xl p-4 hover:bg-gray-50 transition-colors">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              request.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                              request.status === 'approved' ? 'bg-green-100 text-green-800' :
+                              'bg-red-100 text-red-800'
+                            }`}>
+                              {request.status.toUpperCase()}
+                            </span>
+                            {request.expires_at && new Date() > new Date(request.expires_at) && (
+                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                EXPIRED
+                              </span>
+                            )}
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                            <div>
+                              <p className="text-sm text-gray-500">
+                                {request.from_user._id === user._id ? 'Requested from' : 'Request from'}:
+                              </p>
+                              <p className="font-medium">
+                                {request.from_user._id === user._id ? 
+                                  `${request.to_user.name} (${request.to_user.upi_id})` : 
+                                  `${request.from_user.name} (${request.from_user.upi_id})`
+                                }
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-500">Amount:</p>
+                              <p className="font-bold text-blue-600">{formatCurrency(request.amount)}</p>
+                            </div>
+                          </div>
+
+                          {request.note && (
+                            <div className="mb-3">
+                              <p className="text-sm text-gray-500">Note:</p>
+                              <p className="text-gray-700">{request.note}</p>
+                            </div>
+                          )}
+
+                          <div className="text-sm text-gray-500">
+                            <p>Created: {formatDate(request.created_at)}</p>
+                            {request.expires_at && (
+                              <p>Expires: {formatDate(request.expires_at)}</p>
+                            )}
+                            {request.responded_at && (
+                              <p>Responded: {formatDate(request.responded_at)}</p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Action buttons for received requests */}
+                        {request.to_user._id === user._id && request.status === 'pending' && 
+                         new Date() <= new Date(request.expires_at) && (
+                          <div className="flex flex-col gap-2 ml-4">
+                            <button
+                              onClick={() => {
+                                const pin = prompt('Enter your UPI PIN to approve this request:');
+                                if (pin) {
+                                  respondToRequest(request.id, 'approve', pin);
+                                }
+                              }}
+                              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                            >
+                              Approve
+                            </button>
+                            <button
+                              onClick={() => {
+                                const reason = prompt('Enter reason for rejection (optional):');
+                                respondToRequest(request.id, 'reject', null, reason || 'Declined');
+                              }}
+                              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {request.rejection_reason && (
+                        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                          <p className="text-sm text-red-700">
+                            <strong>Rejection reason:</strong> {request.rejection_reason}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Instructions */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6">
+                <h3 className="font-semibold text-blue-800 mb-2">How to Manage Requests</h3>
+                <ul className="text-sm text-blue-700 space-y-1">
+                  <li>• View all your sent and received money requests</li>
+                  <li>• Approve requests by entering your UPI PIN</li>
+                  <li>• Reject requests with an optional reason</li>
+                  <li>• Requests expire after 24 hours automatically</li>
+                </ul>
               </div>
             </div>
           )}
