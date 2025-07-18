@@ -1,0 +1,1 @@
+The KYC management system streamlines customer verification processes. Administrators can review submitted documents, approve or reject applications, track verification status, and ensure compliance with banking regulations. This automated workflow significantly reduces processing time and improves accuracy.

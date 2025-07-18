@@ -1,0 +1,1 @@
+The integrated email communication system allows administrators to communicate directly with customers. Whether sending notifications, account updates, or responding to inquiries, the email interface streamlines customer communication and maintains professional correspondence records.
