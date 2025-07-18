@@ -22,6 +22,11 @@ router.get('/users', AdminAuthMiddleware, AdminController.listUsers);
 router.get('/transactions', AdminAuthMiddleware, AdminController.listTransactions);
 router.post('/transactions/:id/refund', AdminAuthMiddleware, AdminController.refundTransaction);
 
+// KYC Management
+router.get('/kyc/pending', AdminAuthMiddleware, AdminController.getKYCPending);
+router.put('/kyc/:id/approve', AdminAuthMiddleware, AdminController.approveKYC);
+router.put('/kyc/:id/reject', AdminAuthMiddleware, AdminController.rejectKYC);
+
 // Discount management
 router.get('/discounts', AdminAuthMiddleware, AdminController.getDiscounts);
 router.post('/discounts', AdminAuthMiddleware, AdminController.addDiscount);
